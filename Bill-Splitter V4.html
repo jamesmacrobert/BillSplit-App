@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt Splitter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cutive+Mono&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-receipt {
+             font-family: 'Cutive Mono', monospace;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #555; }
+        .receipt-container {
+            background-color: white;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            border-radius: 8px;
+            border: 2px solid transparent;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .receipt-container.active {
+            border-color: #3b82f6; /* Tailwind's blue-500 */
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-lg h-[90vh] flex flex-col">
+        <!-- Header -->
+        <header class="bg-gray-800 text-white p-4 rounded-t-2xl shadow-md flex justify-between items-center">
+             <h1 id="restaurant-name" class="text-xl font-bold text-center truncate">Receipt Splitter</h1>
+             <div><span id="cart-item-count" class="text-sm font-bold"></span></div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow p-4 md:p-6 overflow-y-auto custom-scrollbar bg-gray-50">
+            <!-- Initial View -->
+            <div id="upload-view">
+                <div class="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg bg-white">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    <h2 class="mt-4 text-lg font-semibold text-gray-700">Scan Receipt to Start</h2>
+                    <div class="mt-6">
+                        <label for="receipt-upload" class="cursor-pointer inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">Select Photo</label>
+                        <input id="receipt-upload" type="file" accept="image/*" class="hidden">
+                    </div>
+                </div>
+                 <p id="userIdDisplay" class="text-center text-xs text-gray-400 mt-4 truncate">Connecting...</p>
+            </div>
+
+            <!-- Processing View -->
+            <div id="processing-view" class="hidden text-center p-8"><div class="loader mx-auto"></div><p class="mt-4 text-gray-600 font-medium">Scanning receipt...</p></div>
+
+            <!-- Results View -->
+            <div id="results-view" class="hidden font-receipt">
+                 <div class="text-center mb-2"><h2 class="text-xl uppercase font-bold" id="receipt-restaurant-name">Restaurant</h2></div>
+                 <div id="add-splitter-form-container" class="my-4 hidden"><form id="add-splitter-form" class="flex items-center justify-center space-x-2"><input type="text" id="splitter-name-input" placeholder="Add a friend..." class="flex-grow rounded-md border-gray-300 shadow-sm text-sm max-w-xs" required><button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-blue-600">Add</button></form></div>
+                
+                <div class="flex space-x-4">
+                    <div class="w-1/2 receipt-container p-3 flex flex-col"><h3 class="font-bold text-center text-base border-b pb-1 mb-2 flex-shrink-0">Original Bill</h3><div id="original-bill-list" class="space-y-1 text-sm custom-scrollbar overflow-y-auto flex-grow"></div><div id="original-bill-totals" class="text-sm border-t pt-2 mt-auto flex-shrink-0"></div></div>
+                    <div id="splitters-section" class="w-1/2 space-y-3 custom-scrollbar overflow-y-auto"></div>
+                </div>
+                 <div class="mt-4 text-center"><button id="rescan-button" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">Scan Another Receipt</button></div>
+            </div>
+
+            <!-- Error View -->
+            <div id="error-view" class="hidden text-center p-8 bg-red-50 rounded-lg"><p class="text-red-700 font-semibold">Oops!</p><p id="error-message" class="text-red-600 mt-2 text-sm"></p><button id="try-again-button" class="mt-4 px-4 py-2 bg-red-500 text-white rounded-md">Try Again</button></div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, setLogLevel, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- DOM ELEMENT REFERENCES ---
+        const uploadView = document.getElementById('upload-view'), processingView = document.getElementById('processing-view'), resultsView = document.getElementById('results-view'), errorView = document.getElementById('error-view');
+        const errorMessage = document.getElementById('error-message'), receiptUploadInput = document.getElementById('receipt-upload');
+        const originalBillList = document.getElementById('original-bill-list'), originalBillTotals = document.getElementById('original-bill-totals');
+        const splittersSection = document.getElementById('splitters-section');
+        const addSplitterFormContainer = document.getElementById('add-splitter-form-container'), addSplitterForm = document.getElementById('add-splitter-form'), splitterNameInput = document.getElementById('splitter-name-input');
+        const userIdDisplay = document.getElementById('userIdDisplay'), restaurantNameHeader = document.getElementById('restaurant-name'), receiptRestaurantName = document.getElementById('receipt-restaurant-name'), cartItemCount = document.getElementById('cart-item-count');
+        const rescanButton = document.getElementById('rescan-button'), tryAgainButton = document.getElementById('try-again-button');
+
+        // --- APP STATE ---
+        let db, auth, userId, unsubClaimed = null, unsubSplitters = null, activeSplitterName = null;
+        let scannedReceipt = { restaurantName: '', items: [] };
+        let allClaimedItems = [], allSplitters = [];
+
+        function showView(viewName, message = '') {
+            [uploadView, processingView, resultsView, errorView].forEach(v => v.classList.add('hidden'));
+            document.getElementById(`${viewName}-view`).classList.remove('hidden');
+            if (viewName === 'error') errorMessage.textContent = message || "An unknown error occurred.";
+        }
+        
+        function toBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = reject; }); }
+        
+        async function processReceiptImage(base64ImageData) {
+            showView('processing');
+            const apiKey = "AIzaSyCFmm2VVu_uKLBCIjSdqA-xcvjAaWjq6DQ"; // YOUR GEMINI API KEY
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            const payload = { contents: [{ parts: [ { text: "Analyze this receipt. Extract the restaurant's name and a list of items. For each item, provide its name, individual price, and quantity. Default quantity to 1 if not specified. Provide response as JSON object with 'restaurantName' (string) and 'items' (array of objects with 'name', 'price', 'quantity' keys)." }, { inlineData: { mimeType: "image/jpeg", data: base64ImageData } } ] }], generationConfig: { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { restaurantName: { type: "STRING" }, items: { type: "ARRAY", items: { type: "OBJECT", properties: { name: { type: "STRING" }, price: { type: "NUMBER" }, quantity: { type: "NUMBER" } }, required: ["name", "price", "quantity"] } } }, required: ["restaurantName", "items"] } } };
+            
+            try {
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
+                const result = await response.json();
+
+                if (result.candidates?.[0].content?.parts?.[0]) {
+                    const parsedJson = JSON.parse(result.candidates[0].content.parts[0].text);
+                    if (parsedJson.items?.length > 0) {
+                        scannedReceipt = { restaurantName: parsedJson.restaurantName, items: parsedJson.items.map((item, index) => ({ ...item, id: `item-${index}` })) };
+                        restaurantNameHeader.textContent = scannedReceipt.restaurantName || "Receipt";
+                        receiptRestaurantName.textContent = scannedReceipt.restaurantName || "Restaurant";
+                        await clearAllData();
+                        addSplitterFormContainer.classList.remove('hidden');
+                        renderApp();
+                        showView('results');
+                    } else throw new Error("AI could not find items on the receipt.");
+                } else throw new Error("The AI returned an unexpected response.");
+            } catch (error) { showView('error', error.message); }
+        }
+
+        function renderApp() {
+            cartItemCount.textContent = `${allClaimedItems.length} items claimed`;
+
+            const claimedByOriginalId = allClaimedItems.reduce((acc, item) => {
+                const id = item.data.originalId;
+                if (!acc[id]) acc[id] = 0;
+                acc[id]++;
+                return acc;
+            }, {});
+
+            let totalOriginalValue = 0;
+            originalBillList.innerHTML = '';
+            scannedReceipt.items.forEach(originalItem => {
+                totalOriginalValue += originalItem.price * originalItem.quantity;
+                const takenCount = claimedByOriginalId[originalItem.id] || 0;
+                const remainingCount = originalItem.quantity - takenCount;
+                const isClaimed = remainingCount <= 0;
+
+                const itemEl = document.createElement('div');
+                itemEl.className = `flex items-center justify-between py-1.5 ${isClaimed ? 'text-gray-400 line-through' : ''}`;
+                itemEl.innerHTML = `<div class="flex-grow pr-1"><span class="bg-gray-200 text-gray-700 font-bold px-1.5 py-0.5 rounded-md">${remainingCount}x</span><span class="ml-2">${originalItem.name}</span></div><div class="flex-shrink-0 w-16 text-right"><span>$${originalItem.price.toFixed(2)}</span></div><div class="flex-shrink-0 w-8 text-right"><button class="add-to-bill-btn text-green-500 hover:text-green-700 ${isClaimed || !activeSplitterName ? 'opacity-20 cursor-not-allowed' : ''}" ${isClaimed || !activeSplitterName ? 'disabled' : ''}><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></button></div>`;
+                if (!isClaimed && activeSplitterName) { itemEl.querySelector('.add-to-bill-btn').onclick = () => addItemToBill({ name: originalItem.name, price: originalItem.price, originalId: originalItem.id }); }
+                originalBillList.appendChild(itemEl);
+            });
+            
+            let totalClaimedValue = allClaimedItems.reduce((sum, item) => sum + item.data.price, 0);
+            originalBillTotals.innerHTML = `<div class="flex justify-between font-bold"><span>Total:</span><span>$${totalOriginalValue.toFixed(2)}</span></div><div class="flex justify-between text-red-600 font-bold"><span>Balance:</span><span>$${(totalOriginalValue - totalClaimedValue).toFixed(2)}</span></div>`;
+
+            const claimedBySplitter = allClaimedItems.reduce((acc, item) => {
+                const name = item.data.splitterName;
+                if (!acc[name]) acc[name] = [];
+                acc[name].push(item);
+                return acc;
+            }, {});
+
+            splittersSection.innerHTML = '';
+            allSplitters.forEach(splitter => {
+                const name = splitter.data.name;
+                const items = claimedBySplitter[name] || [];
+                const total = items.reduce((sum, item) => sum + item.data.price, 0);
+                const isActive = name === activeSplitterName;
+
+                const splitterEl = document.createElement('div');
+                splitterEl.className = `receipt-container p-3 cursor-pointer ${isActive ? 'active' : ''}`;
+                
+                let bodyHtml = '';
+                if (isActive) {
+                    if (items.length === 0) {
+                        bodyHtml = `<p class="text-gray-400 text-center p-2">Claim items from the Original Bill.</p>`;
+                    } else {
+                        const groupedItems = items.reduce((acc, item) => {
+                             const key = item.data.originalId;
+                             if (!acc[key]) acc[key] = { ...item.data, count: 0, docIds: [] };
+                             acc[key].count++;
+                             acc[key].docIds.push(item.id);
+                             return acc;
+                        }, {});
+
+                        Object.values(groupedItems).forEach(item => {
+                            bodyHtml += `<div class="flex items-center justify-between py-1.5"><div class="flex-grow pr-1"><span class="bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded-md">${item.count}x</span><span class="ml-2">${item.name}</span></div><div class="flex-shrink-0 w-8 text-right"><button class="remove-from-bill-btn text-red-500 hover:text-red-700" data-docid="${item.docIds[item.docIds.length - 1]}"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></button></div></div>`;
+                        });
+                    }
+                }
+                
+                splitterEl.innerHTML = `<div class="flex justify-between items-center font-bold text-base"><span class="${isActive ? 'text-blue-600' : 'text-gray-800'}">${name}</span><span>$${total.toFixed(2)}</span></div><div class="splitter-body mt-2 space-y-1 text-sm ${isActive ? '' : 'hidden'}">${bodyHtml}</div>`;
+                
+                splitterEl.onclick = (e) => {
+                    if (e.target.closest('.remove-from-bill-btn')) {
+                       const docId = e.target.closest('.remove-from-bill-btn').dataset.docid;
+                       removeItemFromBill(docId);
+                       return;
+                    }
+                    activeSplitterName = name;
+                    renderApp();
+                };
+                splittersSection.appendChild(splitterEl);
+            });
+        }
+        
+        async function clearAllData() {
+            if (!userId || !db) return;
+            const batch = writeBatch(db);
+            const claimedRef = collection(db, 'claimed_items');
+            const splittersRef = collection(db, 'splitters');
+            
+            const claimedSnapshot = await getDocs(claimedRef);
+            claimedSnapshot.forEach(doc => batch.delete(doc.ref));
+            
+            const splittersSnapshot = await getDocs(splittersRef);
+            splittersSnapshot.forEach(doc => batch.delete(doc.ref));
+            
+            await batch.commit();
+        }
+        
+        async function addSplitter(name) {
+             if (!userId || !db) return;
+             try {
+                const collectionRef = collection(db, 'splitters');
+                await addDoc(collectionRef, { name, createdAt: new Date() });
+             } catch (error) { console.error("Error adding splitter:", error); }
+        }
+
+        async function addItemToBill(item) {
+            if (!userId || !db || !activeSplitterName) return;
+            try {
+                const collectionRef = collection(db, 'claimed_items');
+                await addDoc(collectionRef, { ...item, splitterName: activeSplitterName, createdAt: new Date() });
+            } catch (error) { console.error("Error adding item:", error); }
+        }
+
+        async function removeItemFromBill(docId) {
+            if (!userId || !db) return;
+            try {
+                const docRef = doc(db, 'claimed_items', docId);
+                await deleteDoc(docRef);
+            } catch (error) { console.error("Error removing item:", error); }
+        }
+        
+        function setupListeners() {
+            if (unsubClaimed) unsubClaimed();
+            if (unsubSplitters) unsubSplitters();
+            
+            const claimedRef = collection(db, 'claimed_items');
+            unsubClaimed = onSnapshot(claimedRef, (snapshot) => {
+                allClaimedItems = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+                renderApp();
+            });
+            
+            const splittersRef = collection(db, 'splitters');
+            unsubSplitters = onSnapshot(splittersRef, (snapshot) => {
+                allSplitters = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+                renderApp();
+            });
+        }
+        
+        // --- EVENT LISTENERS ---
+        receiptUploadInput.addEventListener('change', async (event) => { if (event.target.files[0]) { const base64Data = await toBase64(event.target.files[0]); processReceiptImage(base64Data); } });
+        rescanButton.addEventListener('click', () => { scannedReceipt = { restaurantName: '', items: [] }; restaurantNameHeader.textContent = 'Receipt Splitter'; splitterNameInput.value = ''; activeSplitterName = null; showView('upload'); addSplitterFormContainer.classList.add('hidden'); });
+        tryAgainButton.addEventListener('click', () => showView('upload'));
+        addSplitterForm.addEventListener('submit', (e) => { e.preventDefault(); const name = splitterNameInput.value.trim(); if (name && !allSplitters.find(s => s.data.name === name)) { activeSplitterName = name; addSplitter(name); splitterNameInput.value = ''; } });
+
+        // --- INITIALIZATION ---
+        async function initialize() {
+            // Paste your Firebase config object here.
+            const firebaseConfig = {
+                apiKey: "AIzaSyAELza0EhhCP1qKKqhMTOMr-ZAQRun7iXM",
+                authDomain: "bill-splitter-v1.firebaseapp.com",
+                projectId: "bill-splitter-v1",
+                storageBucket: "bill-splitter-v1.firebasestorage.app",
+                messagingSenderId: "752281135823",
+                appId: "1:752281135823:web:0a283053ce8b9fc519e5ba",
+                measurementId: "G-6VZGWPHFM4"
+            };
+
+            try {
+                setLogLevel('error');
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        // User is signed in.
+                        userId = user.uid;
+                        userIdDisplay.textContent = `User ID: ${userId.substring(0,8)}...`;
+                        if (!unsubClaimed) { clearAllData(); }
+                        setupListeners();
+                        showView('upload');
+                    }
+                });
+
+                // Attempt to sign in anonymously if there's no current user
+                if (!auth.currentUser) {
+                    await signInAnonymously(auth);
+                }
+            
+            } catch (error) {
+                showView('error', `Initialization failed: ${error.message}`);
+            }
+        }
+        
+        initialize();
+        
+    </script>
+</body>
+</html>
