@@ -144,7 +144,7 @@
             </div>
 
             <div id="results-view" class="hidden font-receipt">
-                 <div class="text-center mb-4"><h2 class="text-2xl uppercase font-bold text-gray-800" id="receipt-restaurant-name">Restaurant</h2></div>
+                 <div class="text-center mb-4"><h2 class="text-xl font-bold text-gray-800" id="receipt-restaurant-name">Your Original Bill</h2></div>
 
                  <div id="add-splitter-form-container" class="my-6 hidden">
                     <form id="add-splitter-form" class="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-3">
@@ -267,7 +267,6 @@
                             items: parsedJson.items.map((item, index) => ({ ...item, id: `item-${index}` }))
                         };
                         
-                        receiptRestaurantName.textContent = scannedReceipt.restaurantName || "Restaurant";
                         originalBillTitle.textContent = scannedReceipt.restaurantName || "Original Bill";
                         originalBillAddress.textContent = scannedReceipt.restaurantAddress;
                         
