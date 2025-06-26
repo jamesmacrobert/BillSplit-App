@@ -156,7 +156,7 @@
             </div>
 
             <div id="results-view" class="hidden font-receipt">
-                 <div class="text-center mb-4"><h2 class="text-lg font-bold text-black" id="receipt-restaurant-name">Your Original Bill</h2></div>
+                 <div class="text-center mb-1"><h2 class="text-lg font-bold text-black" id="receipt-restaurant-name">Your Original Bill</h2></div>
 
                 <div class="flex flex-col md:flex-row md:space-x-4 space-y-6 md:space-y-0">
                     <div class="w-full md:w-1/2 receipt-container p-4 flex flex-col">
@@ -168,7 +168,7 @@
                     <div id="splitters-section" class="w-full md:w-1/2 space-y-4 custom-scrollbar overflow-y-auto"></div>
                 </div>
 
-                 <div id="add-splitter-form-container" class="mt-8 hidden">
+                 <div id="add-splitter-form-container" class="mt-4 hidden">
                     <form id="add-splitter-form" class="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-3">
                         <input type="text" id="splitter-name-input" placeholder="Add a friend's name..." class="w-full sm:max-w-xs px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-base focus:ring-indigo-500 focus:border-indigo-500" required>
                         <button type="submit" class="w-full sm:w-auto px-6 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-theme hover:bg-theme-dark focus:ring-theme">Add</button>
@@ -176,8 +176,8 @@
                 </div>
 
                  <div class="mt-8 flex justify-center space-x-4">
-                    <button id="rescan-button" class="btn-secondary">Scan Another Receipt</button>
-                    <button id="summary-button" class="px-6 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-theme hover:bg-theme-dark focus:ring-theme">See Carts Summary</button>
+                    <button id="rescan-button" class="px-4 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-gray-500 hover:bg-gray-400 focus:ring-theme">Scan Another Receipt</button>
+                    <button id="summary-button" class="px-4 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-theme hover:bg-theme-dark focus:ring-theme">See Carts Summary</button>
                 </div>
             </div>
             
@@ -450,7 +450,7 @@
                 </div>
                 <div class="text-right font-receipt text-lg mb-2">${scannedReceipt.currency}${tipAmount.toFixed(2)}</div>
                 <div class="flex justify-between font-bold text-lg border-t pt-2 mt-2"><span>Total:</span><span>${scannedReceipt.currency}${grandTotal.toFixed(2)}</span></div>
-                <div class="flex justify-between ${balanceColorClass} font-bold mt-1 text-lg"><span>Balance:</span><span>${scannedReceipt.currency}${balance.toFixed(2)}</span></div>
+                <div class="flex justify-between ${balanceColorClass} font-bold mt-1 text-lg"><span>Balance Due:</span><span>${scannedReceipt.currency}${balance.toFixed(2)}</span></div>
                 `;
             setupTipButtons();
         }
