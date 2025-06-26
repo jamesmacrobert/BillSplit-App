@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill Buddy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cutive+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Unica+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f4f2;
+        }
+        .font-receipt {
+             font-family: 'Cutive Mono', monospace;
+        }
+        .font-comfortaa {
+            font-family: 'Comfortaa', sans-serif;
+        }
+        /* --- Custom Theme Colors --- */
+        .font-title {
+            font-family: 'Unica One', sans-serif;
+            color: #ff7754;
+        }
+        .text-theme {
+            color: #ff7754;
+        }
+        .border-theme {
+            border-color: #ff7754;
+        }
+        .bg-theme {
+            background-color: #ff7754;
+        }
+        .hover\:bg-theme-dark:hover {
+            background-color: #e66a46; /* Darker shade for hover */
+        }
+         .hover\:bg-theme-light:hover {
+            background-color: #fff1ec; /* Lighter shade for hover */
+        }
+        .focus\:ring-theme:focus {
+            --tw-ring-color: #ff7754;
+        }
+        /* --- End Custom Theme Colors --- */
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #e5e7eb; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        .receipt-container {
+            background-color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            border-radius: 12px;
+            border: 2px solid transparent;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .receipt-container.active {
+            border-color: #3b82f6;
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.25);
+        }
+        .btn-secondary {
+            @apply px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition ease-in-out duration-150;
+        }
+        .btn-danger {
+            @apply px-5 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-400 transition ease-in-out duration-150;
+        }
+    </style>
+</head>
+<body class="flex items-stretch justify-center min-h-screen pb-4 sm:p-6">
+
+    <div class="w-full max-w-xl mx-auto bg-white rounded-none sm:rounded-2xl shadow-xl flex flex-col">
+        <header class="bg-white text-gray-800 pt-6 sm:pt-4 p-4 rounded-t-2xl">
+             <h1 id="app-title" class="text-3xl font-bold text-center font-title tracking-wider">Bill Buddy</h1>
+        </header>
+
+        <main class="flex-grow p-4 sm:p-6 overflow-y-auto custom-scrollbar" style="background-color: #f5f4f2;">
+            <div id="upload-view" class="font-comfortaa">
+                <div class="bg-white p-6 sm:p-8 rounded-xl shadow-md">
+                    <div class="flex items-center">
+                        <span class="text-4xl mr-5">📷</span>
+                        <div>
+                            <h3 class="font-semibold text-lg text-theme">Scan Receipt</h3>
+                            <p class="text-gray-600 text-sm">Upload or snap a photo of your Bill</p>
+                        </div>
+                    </div>
+            
+                    <div class="flex justify-start pl-4 my-2">
+                        <span class="text-2xl text-theme">↓</span>
+                    </div>
+            
+                    <div class="flex items-center">
+                        <span class="text-4xl mr-5">🧾</span>
+                        <div>
+                            <h3 class="font-semibold text-lg text-theme">AI Wizardry</h3>
+                            <p class="text-gray-600 text-sm">We'll read every line and turn it into an itemized digital receipt.</p>
+                        </div>
+                    </div>
+            
+                    <div class="flex justify-start pl-4 my-2">
+                        <span class="text-2xl text-theme">↓</span>
+                    </div>
+            
+                    <div class="flex items-center">
+                        <span class="text-4xl mr-5">🛒</span>
+                        <div>
+                            <h3 class="font-semibold text-lg text-theme">Split and Assign</h3>
+                            <p class="text-gray-600 text-sm">Drag items into you or your friends' carts to split the cost instantly.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                     <label for="receipt-upload" class="cursor-pointer flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl bg-white transition-colors border-theme hover:bg-theme-light">
+                        <svg class="h-12 w-12 text-theme" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span class="mt-4 text-2xl font-semibold text-theme">Scan your Bill to Start</span>
+                    </label>
+                    <input id="receipt-upload" type="file" accept="image/*" class="hidden">
+                </div>
+
+                 <p id="userIdDisplay" class="text-center text-xs text-gray-400 mt-6 truncate">Connecting...</p>
+            </div>
+
+
+            <div id="processing-view" class="hidden text-center p-12 sm:p-16 font-comfortaa">
+                <div class="loader mx-auto"></div>
+                <p class="mt-6 text-gray-600 font-medium text-lg">Scanning Your Receipt...</p>
+                <p class="mt-4 text-theme text-sm">Absolute AI Wizardry!</p>
+            </div>
+
+            <div id="results-view" class="hidden font-receipt">
+                 <div class="text-center mb-4"><h2 class="text-2xl uppercase font-bold text-gray-800" id="receipt-restaurant-name">Restaurant</h2></div>
+
+                 <div id="add-splitter-form-container" class="my-6 hidden">
+                    <form id="add-splitter-form" class="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-3">
+                        <input type="text" id="splitter-name-input" placeholder="Add a friend's name..." class="w-full sm:max-w-xs px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-base focus:ring-indigo-500 focus:border-indigo-500" required>
+                        <button type="submit" class="w-full sm:w-auto px-6 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-theme hover:bg-theme-dark focus:ring-theme">Add</button>
+                    </form>
+                </div>
+
+                <div class="flex flex-col md:flex-row md:space-x-4 space-y-6 md:space-y-0">
+                    <div class="w-full md:w-1/2 receipt-container p-4 flex flex-col">
+                        <h3 id="original-bill-title" class="font-bold text-center text-2xl pt-2 border-t border-gray-200 flex-shrink-0 text-black">Original Bill</h3>
+                        <p id="original-bill-address" class="text-center text-xs text-gray-500 mb-2 border-b pb-2"></p>
+                        <div id="original-bill-list" class="space-y-2 text-base custom-scrollbar overflow-y-auto flex-grow"></div>
+                        <div id="original-bill-totals" class="text-base border-t pt-3 mt-auto flex-shrink-0 font-bold text-gray-800"></div>
+                    </div>
+                    <div id="splitters-section" class="w-full md:w-1/2 space-y-4 custom-scrollbar overflow-y-auto"></div>
+                </div>
+                 <div class="mt-8 flex justify-center space-x-4">
+                    <button id="rescan-button" class="btn-secondary">Scan Another Receipt</button>
+                    <button id="summary-button" class="px-6 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-theme hover:bg-theme-dark focus:ring-theme">See Carts Summary</button>
+                </div>
+            </div>
+            
+            <div id="summary-view" class="hidden">
+                <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Carts Summary</h2>
+                <div id="summary-list" class="space-y-6">
+                    </div>
+                <div id="summary-grand-total" class="mt-8 pt-4 border-t-2 border-gray-300 text-right font-bold text-xl text-gray-800">
+                    </div>
+                <div class="mt-8 text-center">
+                    <button id="back-to-results-button" class="px-6 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-theme hover:bg-theme-dark focus:ring-theme">Back to Splitting</button>
+                </div>
+            </div>
+
+            <div id="error-view" class="hidden text-center p-12 sm:p-16 bg-red-50 rounded-xl shadow-sm">
+                <p class="text-red-700 font-bold text-xl">Oops!</p>
+                <p id="error-message" class="text-red-600 mt-3 text-base"></p>
+                <button id="try-again-button" class="mt-8 btn-danger">Try Again</button>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, setLogLevel, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- DOM ELEMENT REFERENCES ---
+        const uploadView = document.getElementById('upload-view'), processingView = document.getElementById('processing-view'), resultsView = document.getElementById('results-view'), errorView = document.getElementById('error-view'), summaryView = document.getElementById('summary-view');
+        const errorMessage = document.getElementById('error-message'), receiptUploadInput = document.getElementById('receipt-upload');
+        const originalBillList = document.getElementById('original-bill-list'), originalBillTotals = document.getElementById('original-bill-totals'), originalBillTitle = document.getElementById('original-bill-title'), originalBillAddress = document.getElementById('original-bill-address');
+        const splittersSection = document.getElementById('splitters-section');
+        const addSplitterFormContainer = document.getElementById('add-splitter-form-container'), addSplitterForm = document.getElementById('add-splitter-form'), splitterNameInput = document.getElementById('splitter-name-input');
+        const userIdDisplay = document.getElementById('userIdDisplay'), appTitle = document.getElementById('app-title'), receiptRestaurantName = document.getElementById('receipt-restaurant-name');
+        const rescanButton = document.getElementById('rescan-button'), tryAgainButton = document.getElementById('try-again-button'), summaryButton = document.getElementById('summary-button'), backToResultsButton = document.getElementById('back-to-results-button');
+        const summaryList = document.getElementById('summary-list'), summaryGrandTotal = document.getElementById('summary-grand-total');
+
+        // --- APP STATE ---
+        let db, auth, userId, unsubClaimed = null, unsubSplitters = null, activeSplitterName = null;
+        let scannedReceipt = { restaurantName: '', restaurantAddress: '', currency: '$', items: [] };
+        let allClaimedItems = [], allSplitters = [];
+
+        function showView(viewName, message = '') {
+            [uploadView, processingView, resultsView, errorView, summaryView].forEach(v => v.classList.add('hidden'));
+            document.getElementById(`${viewName}-view`).classList.remove('hidden');
+            if (viewName === 'error') errorMessage.textContent = message || "An unknown error occurred.";
+        }
+
+        function toBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = reject; }); }
+
+        async function processReceiptImage(base64ImageData) {
+            showView('processing');
+            const apiKey = "AIzaSyCFmm2VVu_uKLBCIjSdqA-xcvjAaWjq6DQ"; // YOUR GEMINI API KEY
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{
+                    parts: [
+                        { text: "Analyze this receipt. Extract the restaurant's name, its address, the currency symbol (e.g., $, £, €, R), and a list of items. For each item, provide its name, individual price, and quantity. Default quantity to 1 if not specified. Provide response as a JSON object." },
+                        { inlineData: { mimeType: "image/jpeg", data: base64ImageData } }
+                    ]
+                }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            restaurantName: { type: "STRING" },
+                            restaurantAddress: { type: "STRING" },
+                            currency: { type: "STRING" },
+                            items: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        name: { type: "STRING" },
+                                        price: { type: "NUMBER" },
+                                        quantity: { type: "NUMBER" }
+                                    },
+                                    required: ["name", "price", "quantity"]
+                                }
+                            }
+                        },
+                        required: ["restaurantName", "items", "currency"]
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
+                const result = await response.json();
+
+                if (result.candidates?.[0].content?.parts?.[0]) {
+                    const parsedJson = JSON.parse(result.candidates[0].content.parts[0].text);
+                    if (parsedJson.items?.length > 0) {
+                        scannedReceipt = {
+                            restaurantName: parsedJson.restaurantName,
+                            restaurantAddress: parsedJson.restaurantAddress || '',
+                            currency: parsedJson.currency || '$',
+                            items: parsedJson.items.map((item, index) => ({ ...item, id: `item-${index}` }))
+                        };
+                        
+                        receiptRestaurantName.textContent = scannedReceipt.restaurantName || "Restaurant";
+                        originalBillTitle.textContent = scannedReceipt.restaurantName || "Original Bill";
+                        originalBillAddress.textContent = scannedReceipt.restaurantAddress;
+                        
+                        await clearAllData();
+                        addSplitterFormContainer.classList.remove('hidden');
+                        renderApp();
+                        showView('results');
+                    } else throw new Error("AI could not find items on the receipt.");
+                } else throw new Error("The AI returned an unexpected response.");
+            } catch (error) { showView('error', error.message); }
+        }
+
+        function renderApp() {
+            appTitle.textContent = 'Bill Buddy';
+
+            const claimedByOriginalId = allClaimedItems.reduce((acc, item) => {
+                const id = item.data.originalId;
+                if (!acc[id]) acc[id] = 0;
+                acc[id]++;
+                return acc;
+            }, {});
+
+            let totalOriginalValue = 0;
+            originalBillList.innerHTML = '';
+            scannedReceipt.items.forEach(originalItem => {
+                totalOriginalValue += originalItem.price * originalItem.quantity;
+                const takenCount = claimedByOriginalId[originalItem.id] || 0;
+                const remainingCount = originalItem.quantity - takenCount;
+                const isClaimed = remainingCount <= 0;
+
+                const itemEl = document.createElement('div');
+                itemEl.className = `flex items-center justify-between py-2 ${isClaimed ? 'text-gray-400 line-through' : ''}`;
+                itemEl.innerHTML = `<div class="flex-grow pr-1"><span class="bg-gray-200 text-gray-700 font-bold px-2 py-1 rounded-md text-sm">${remainingCount}x</span><span class="ml-3">${originalItem.name}</span></div><div class="flex-shrink-0 w-20 text-right"><span>${scannedReceipt.currency}${originalItem.price.toFixed(2)}</span></div><div class="flex-shrink-0 w-10 text-right"><button class="add-to-bill-btn text-green-500 hover:text-green-700 transition ease-in-out duration-150 ${isClaimed || !activeSplitterName ? 'opacity-30 cursor-not-allowed' : ''}" ${isClaimed || !activeSplitterName ? 'disabled' : ''}><svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></button></div>`;
+                if (!isClaimed && activeSplitterName) { itemEl.querySelector('.add-to-bill-btn').onclick = () => addItemToBill({ name: originalItem.name, price: originalItem.price, originalId: originalItem.id }); }
+                originalBillList.appendChild(itemEl);
+            });
+
+            let totalClaimedValue = allClaimedItems.reduce((sum, item) => sum + item.data.price, 0);
+            originalBillTotals.innerHTML = `<div class="flex justify-between font-bold text-lg"><span>Total:</span><span>${scannedReceipt.currency}${totalOriginalValue.toFixed(2)}</span></div><div class="flex justify-between text-red-600 font-bold mt-1 text-lg"><span>Balance:</span><span>${scannedReceipt.currency}${(totalOriginalValue - totalClaimedValue).toFixed(2)}</span></div>`;
+
+            const claimedBySplitter = allClaimedItems.reduce((acc, item) => {
+                const name = item.data.splitterName;
+                if (!acc[name]) acc[name] = [];
+                acc[name].push(item);
+                return acc;
+            }, {});
+
+            splittersSection.innerHTML = '';
+            allSplitters.forEach(splitter => {
+                const name = splitter.data.name;
+                const items = claimedBySplitter[name] || [];
+                const total = items.reduce((sum, item) => sum + item.data.price, 0);
+                const isActive = name === activeSplitterName;
+
+                const splitterEl = document.createElement('div');
+                splitterEl.className = `receipt-container p-4 cursor-pointer ${isActive ? 'active' : ''}`;
+
+                let bodyHtml = '';
+                if (isActive) {
+                    if (items.length === 0) {
+                        bodyHtml = `<p class="text-gray-400 text-center p-3 text-sm">Claim items from the Original Bill.</p>`;
+                    } else {
+                        const groupedItems = items.reduce((acc, item) => {
+                             const key = item.data.originalId;
+                             if (!acc[key]) acc[key] = { ...item.data, count: 0, docIds: [] };
+                             acc[key].count++;
+                             acc[key].docIds.push(item.id);
+                             return acc;
+                        }, {});
+
+                        Object.values(groupedItems).forEach(item => {
+                            bodyHtml += `<div class="flex items-center justify-between py-2"><div class="flex-grow pr-1"><span class="bg-blue-100 text-blue-800 font-bold px-2 py-1 rounded-md text-sm">${item.count}x</span><span class="ml-3">${item.name}</span></div><div class="flex-shrink-0 w-10 text-right"><button class="remove-from-bill-btn text-red-500 hover:text-red-700 transition ease-in-out duration-150" data-docid="${item.docIds[item.docIds.length - 1]}"><svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></button></div></div>`;
+                        });
+                    }
+                }
+
+                splitterEl.innerHTML = `<div class="flex justify-between items-center font-bold text-lg"><span class="${isActive ? 'text-blue-600' : 'text-gray-800'}">${name}</span><span>${scannedReceipt.currency}${total.toFixed(2)}</span></div><div class="splitter-body mt-3 space-y-2 text-base ${isActive ? '' : 'hidden'}">${bodyHtml}</div>`;
+
+                splitterEl.onclick = (e) => {
+                    if (e.target.closest('.remove-from-bill-btn')) {
+                       const docId = e.target.closest('.remove-from-bill-btn').dataset.docid;
+                       removeItemFromBill(docId);
+                       return;
+                    }
+                    activeSplitterName = name;
+                    renderApp();
+                };
+                splittersSection.appendChild(splitterEl);
+            });
+        }
+        
+        function renderSummaryView() {
+            summaryList.innerHTML = '';
+            summaryGrandTotal.innerHTML = '';
+            
+            const claimedBySplitter = allClaimedItems.reduce((acc, item) => {
+                const name = item.data.splitterName;
+                if (!acc[name]) acc[name] = [];
+                acc[name].push(item);
+                return acc;
+            }, {});
+
+            let grandTotal = 0;
+
+            allSplitters.forEach(splitter => {
+                const name = splitter.data.name;
+                const items = claimedBySplitter[name] || [];
+                if (items.length === 0) return;
+
+                const subTotal = items.reduce((sum, item) => sum + item.data.price, 0);
+                grandTotal += subTotal;
+
+                const splitterCard = document.createElement('div');
+                splitterCard.className = 'bg-white p-4 rounded-lg shadow';
+                
+                let itemsHtml = '';
+                const groupedItems = items.reduce((acc, item) => {
+                     const key = item.data.name;
+                     if (!acc[key]) acc[key] = { ...item.data, count: 0, totalPrice: 0 };
+                     acc[key].count++;
+                     acc[key].totalPrice += item.data.price;
+                     return acc;
+                }, {});
+
+                Object.values(groupedItems).forEach(item => {
+                    itemsHtml += `<div class="flex justify-between items-center text-sm text-gray-600 py-1"><span>${item.count}x ${item.name}</span><span>${scannedReceipt.currency}${item.totalPrice.toFixed(2)}</span></div>`;
+                });
+
+                splitterCard.innerHTML = `
+                    <h3 class="font-bold text-lg text-gray-800">${name}</h3>
+                    <div class="mt-2 mb-3 border-t pt-2">${itemsHtml}</div>
+                    <div class="text-right font-bold text-gray-700">Subtotal: ${scannedReceipt.currency}${subTotal.toFixed(2)}</div>
+                `;
+                summaryList.appendChild(splitterCard);
+            });
+
+            summaryGrandTotal.innerHTML = `<span>Grand Total: ${scannedReceipt.currency}${grandTotal.toFixed(2)}</span>`;
+        }
+
+        async function clearAllData() {
+            if (!userId || !db) return;
+            const batch = writeBatch(db);
+            const claimedRef = collection(db, 'claimed_items');
+            const splittersRef = collection(db, 'splitters');
+
+            const claimedSnapshot = await getDocs(claimedRef);
+            claimedSnapshot.forEach(doc => batch.delete(doc.ref));
+
+            const splittersSnapshot = await getDocs(splittersRef);
+            splittersSnapshot.forEach(doc => batch.delete(doc.ref));
+
+            await batch.commit();
+        }
+
+        async function addSplitter(name) {
+             if (!userId || !db) return;
+             try {
+                const collectionRef = collection(db, 'splitters');
+                await addDoc(collectionRef, { name, createdAt: new Date() });
+             } catch (error) { console.error("Error adding splitter:", error); }
+        }
+
+        async function addItemToBill(item) {
+            if (!userId || !db || !activeSplitterName) return;
+            try {
+                const collectionRef = collection(db, 'claimed_items');
+                await addDoc(collectionRef, { ...item, splitterName: activeSplitterName, createdAt: new Date() });
+            } catch (error) { console.error("Error adding item:", error); }
+        }
+
+        async function removeItemFromBill(docId) {
+            if (!userId || !db) return;
+            try {
+                const docRef = doc(db, 'claimed_items', docId);
+                await deleteDoc(docRef);
+            } catch (error) { console.error("Error removing item:", error); }
+        }
+
+        function setupListeners() {
+            if (unsubClaimed) unsubClaimed();
+            if (unsubSplitters) unsubSplitters();
+
+            const claimedRef = collection(db, 'claimed_items');
+            unsubClaimed = onSnapshot(claimedRef, (snapshot) => {
+                allClaimedItems = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+                if (scannedReceipt.items.length > 0) renderApp();
+            });
+
+            const splittersRef = collection(db, 'splitters');
+            unsubSplitters = onSnapshot(splittersRef, (snapshot) => {
+                allSplitters = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+                if (scannedReceipt.items.length > 0) renderApp();
+            });
+        }
+
+        // --- EVENT LISTENERS ---
+        receiptUploadInput.addEventListener('change', async (event) => { if (event.target.files[0]) { const base64Data = await toBase64(event.target.files[0]); processReceiptImage(base64Data); } });
+        rescanButton.addEventListener('click', () => {
+            scannedReceipt = { restaurantName: '', restaurantAddress: '', currency: '$', items: [] };
+            appTitle.textContent = 'Bill Buddy';
+            originalBillTitle.textContent = 'Original Bill';
+            originalBillAddress.textContent = '';
+            splitterNameInput.value = '';
+            activeSplitterName = null;
+            showView('upload');
+            addSplitterFormContainer.classList.add('hidden');
+        });
+        tryAgainButton.addEventListener('click', () => showView('upload'));
+        addSplitterForm.addEventListener('submit', (e) => { e.preventDefault(); const name = splitterNameInput.value.trim(); if (name && !allSplitters.find(s => s.data.name === name)) { activeSplitterName = name; addSplitter(name); splitterNameInput.value = ''; } });
+        
+        summaryButton.addEventListener('click', () => {
+            renderSummaryView();
+            showView('summary');
+        });
+        backToResultsButton.addEventListener('click', () => showView('results'));
+
+        // --- INITIALIZATION ---
+        async function initialize() {
+            // Paste your Firebase config object here.
+            const firebaseConfig = {
+                apiKey: "AIzaSyAELza0EhhCP1qKKqhMTOMr-ZAQRun7iXM",
+                authDomain: "bill-splitter-v1.firebaseapp.com",
+                projectId: "bill-splitter-v1",
+                storageBucket: "bill-splitter-v1.firebasestorage.app",
+                messagingSenderId: "752281135823",
+                appId: "1:752281135823:web:0a283053ce8b9fc519e5ba",
+                measurementId: "G-6VZGWPHFM4"
+            };
+
+            try {
+                setLogLevel('error');
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        userIdDisplay.textContent = `User ID: ${userId.substring(0,8)}...`;
+                        if (!unsubClaimed) { clearAllData(); }
+                        setupListeners();
+                        showView('upload');
+                    }
+                });
+
+                if (!auth.currentUser) {
+                    await signInAnonymously(auth);
+                }
+
+            } catch (error) {
+                showView('error', `Initialization failed: ${error.message}`);
+            }
+        }
+
+        initialize();
+
+    </script>
+</body>
+</html>
