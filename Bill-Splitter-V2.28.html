@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bill Buddy</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cutive+Mono&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Unica+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Unica+One&display=swap" rel="stylesheet"> 
+    <link href="https://fonts.googleapis.com/css2?family=Londrina+Solid&display=swap" rel="stylesheet"> 
     <link href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap" rel="stylesheet">
     <style>
         body {
@@ -22,7 +24,8 @@
         }
         /* --- Custom Theme Colors --- */
         .font-title {
-            font-family: 'Unica One', sans-serif;
+            /*font-family: 'Unica One', sans-serif;*/
+            font-family: 'Londrina Solid', sans-serif;
             color: #ff7754;
         }
         .text-theme {
@@ -183,40 +186,47 @@
             </div>
 
             <div id="results-view" class="hidden font-receipt">
-                 <div class="text-center mb-1"><h2 class="text-lg font-bold text-black" id="receipt-restaurant-name">Your Original Bill</h2></div>
+                <div class="text-center mb-1"><h2 class="text-lg font-bold text-black" id="receipt-restaurant-name">Your Original Bill</h2></div>
 
-                <div class="flex flex-col md:flex-row md:space-x-4 space-y-6 md:space-y-0">
-                    <div class="w-full md:w-1/2 receipt-container p-4 flex flex-col">
-                        <h3 id="original-bill-title" class="font-bold text-center text-2xl pt-2 border-t border-gray-200 flex-shrink-0 text-black">Original Bill</h3>
-                        <p id="original-bill-address" class="text-center text-xs text-gray-500 mb-2 border-b pb-2"></p>
-                        <div id="original-bill-list" class="space-y-2 text-base custom-scrollbar overflow-y-auto flex-grow"></div>
-                        <div id="original-bill-totals" class="border-t pt-3 mt-auto flex-shrink-0"></div>
-                    </div>
-                    <div id="splitters-section" class="w-full md:w-1/2 space-y-4 custom-scrollbar overflow-y-auto"></div>
-                </div>
+               <div class="flex flex-col md:flex-row md:space-x-4 space-y-6 md:space-y-0">
+                <div id="receipts-area" class="flex flex-col md:flex-row md:space-x-4 space-y-6 md:space-y-0 bg-[#f5f4f2] p-2"></div>
+                   <div class="w-full md:w-1/2 receipt-container p-4 flex flex-col">
+                       <h3 id="original-bill-title" class="font-bold text-center text-2xl pt-2 border-t border-gray-200 flex-shrink-0 text-black">Original Bill</h3>
+                       <p id="original-bill-address" class="text-center text-xs text-gray-500 mb-2 border-b pb-2"></p>
+                       <div id="original-bill-list" class="space-y-2 text-base custom-scrollbar overflow-y-auto flex-grow"></div>
+                       <div id="original-bill-totals" class="border-t pt-3 mt-auto flex-shrink-0"></div>
+                   </div>
 
-                 <div id="add-splitter-form-container" class="mt-4 hidden">
-                    <form id="add-splitter-form" class="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-3">
-                        <input type="text" id="splitter-name-input" placeholder="Add a friend's name..." class="w-full sm:max-w-xs px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-base focus:ring-indigo-500 focus:border-indigo-500" required>
-                        <button type="submit" class="w-full sm:w-auto px-6 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-theme hover:bg-theme-dark focus:ring-theme">Add</button>
-                    </form>
-                </div>
+                   <div class="w-full md:w-1/2">
+                       <div class="text-center mb-1"><h2 class="text-lg font-bold text-black">Your Individual Carts</h2></div>
+                       
+                       <div id="splitters-section" class="space-y-4 custom-scrollbar overflow-y-auto"></div>
+                   </div>
+               </div>
 
-                <div class="mt-8 flex justify-center space-x-4">
-                    <button id="rescan-button" class="flex-1 px-4 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-gray-500 hover:bg-gray-400 focus:ring-theme">Scan Another Receipt</button>
-                    <button id="summary-button" class="flex-1 px-4 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-theme hover:bg-theme-dark focus:ring-theme">See Carts Summary</button>
-                </div>
+               <div id="add-splitter-form-container" class="mt-4 hidden">
+                <form id="add-splitter-form" class="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-3">
+                    <input type="text" id="splitter-name-input" placeholder="Add a friend's name..." class="font-comfortaa w-full sm:max-w-xs px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-base focus:ring-indigo-500 focus:border-indigo-500" required>
+                    <button type="submit" class="font-comfortaa w-full sm:w-auto px-6 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-theme hover:bg-theme-dark focus:ring-theme">Add</button>
+                </form>
             </div>
+
+            <div class="mt-8 flex justify-center space-x-4">
+                <button id="rescan-button" class="font-comfortaa flex-1 px-4 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-gray-500 hover:bg-gray-400 focus:ring-theme">Scan Another Receipt</button>
+                <button id="summary-button" class="font-comfortaa flex-1 px-4 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-theme hover:bg-theme-dark focus:ring-theme">See Carts Summary</button>
+            </div>
+           </div>
             
-            <div id="summary-view" class="hidden">
-                <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Carts Summary</h2>
-                <div id="summary-list" class="space-y-6">
-                    </div>
-                <div id="summary-grand-total" class="mt-8 pt-4 border-t-2 border-gray-300 text-right font-bold text-xl text-gray-800">
-                    </div>
-                <div class="mt-8 text-center">
-                    <button id="back-to-results-button" class="px-6 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-theme hover:bg-theme-dark focus:ring-theme">Back to Splitting</button>
+           <div id="summary-view" class="hidden">
+            <h2 class="text-2xl font-bold text-center mb-6 text-gray-800 font-receipt">Summary of Carts</h2>
+            <div id="summary-list" class="space-y-6 bg-[#f5f4f2] p-4"> 
                 </div>
+            <div id="summary-grand-total" class="font-receipt mt-8 pt-4 border-t-2 border-gray-300 text-right font-bold text-xl text-gray-800">
+                </div>
+            <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button id="back-to-results-button" class="font-comfortaa w-full px-6 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-theme hover:bg-theme-dark focus:ring-theme">Back to Splitting</button>
+                <button id="save-image-button" class="font-comfortaa w-full px-6 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-green-600 hover:bg-green-700 focus:ring-theme">Save Receipts</button>
+            </div>
             </div>
 
             <div id="error-view" class="hidden text-center p-12 sm:p-16 bg-red-50 rounded-xl shadow-sm">
@@ -470,7 +480,6 @@
                 return acc;
             }, {});
 
-            // --- FIX: Calculate total in carts first ---
             let totalAmountInCarts = 0;
 
             splittersSection.innerHTML = '';
@@ -482,7 +491,6 @@
                 const totalWithTip = itemsTotal + tipForPerson;
                 const isActive = name === activeSplitterName;
 
-                // Accumulate the total cart value (this will be 0 if the cart is empty)
                 totalAmountInCarts += totalWithTip; 
 
                 const splitterEl = document.createElement('div');
@@ -521,7 +529,8 @@
                     }
                 }
                 
-                splitterEl.innerHTML = `<div class="flex justify-between items-center font-bold text-lg"><span class="${isActive ? 'text-blue-600' : 'text-gray-800'}">${name}</span><span>${scannedReceipt.currency}${totalWithTip.toFixed(2)}</span></div><div class="splitter-body mt-3 space-y-2 text-base ${isActive ? '' : 'hidden'}">${bodyHtml}</div>`;
+                // --- THIS IS THE MODIFIED LINE ---
+                splitterEl.innerHTML = `<div class="flex justify-between items-center font-bold text-lg"><span class="${isActive ? 'text-theme' : 'text-gray-800'}">${name}</span><span>${scannedReceipt.currency}${totalWithTip.toFixed(2)}</span></div><div class="splitter-body mt-3 space-y-2 text-base ${isActive ? '' : 'hidden'}">${bodyHtml}</div>`;
 
                 splitterEl.onclick = (e) => {
                     if (e.target.closest('.remove-from-bill-btn')) {
@@ -535,11 +544,9 @@
                 splittersSection.appendChild(splitterEl);
             });
             
-            // --- Corrected calculations for Original Bill Display ---
             const subtotal = scannedReceipt.subtotal;
             const tipAmount = subtotal * (tipPercentage / 100);
             const grandTotal = subtotal + tipAmount;
-            // The balance is now correctly calculated AFTER the loop has run
             const balance = grandTotal - totalAmountInCarts; 
             const balanceColorClass = balance > 0.001 ? 'text-red-600' : 'text-green-600';
 
@@ -592,7 +599,8 @@
                 grandTotalOfTips += tipForPerson;
 
                 const splitterCard = document.createElement('div');
-                splitterCard.className = 'bg-white p-4 rounded-lg shadow';
+                // After
+                splitterCard.className = 'receipt-container p-4 shadow-lg font-receipt';
                 
                 let itemsHtml = '';
                 const groupedItems = items.reduce((acc, item) => {
@@ -604,21 +612,53 @@
                 }, {});
 
                 Object.values(groupedItems).forEach(item => {
-                    itemsHtml += `<div class="flex justify-between items-center text-sm text-gray-600 py-1"><span>${item.count}x ${item.name}</span><span>${scannedReceipt.currency}${item.totalPrice.toFixed(2)}</span></div>`;
+                    itemsHtml += `<div class="flex justify-between items-center text-sm text-gray-600 py-0"><span>${item.count}x ${item.name}</span><span>${scannedReceipt.currency}${item.totalPrice.toFixed(2)}</span></div>`;
                 });
 
                 itemsHtml += `<div class="flex justify-between items-center text-sm text-gray-600 py-1 border-t mt-1 pt-1"><span class="font-bold">Tip</span><span class="font-bold">${scannedReceipt.currency}${tipForPerson.toFixed(2)}</span></div>`;
 
                 splitterCard.innerHTML = `
-                    <h3 class="font-bold text-lg text-gray-800">${name}</h3>
-                    <div class="mt-2 mb-3 border-t pt-2">${itemsHtml}</div>
-                    <div class="text-right font-bold text-gray-800 border-t-2 pt-2">Total: ${scannedReceipt.currency}${totalForSplitter.toFixed(2)}</div>
+                <div class="text-right text-[10px] text-theme pb-0">Powered By Bill Buddy</div>
+                <h3 class="font-bold text-lg text-theme">${name}</h3>
+                <div class="mt-2 mb-3 border-t pt-2">${itemsHtml}</div>
+                <div class="text-right font-bold text-gray-800 border-t-2 pt-2">Total: ${scannedReceipt.currency}${totalForSplitter.toFixed(2)}</div>
                 `;
                 summaryList.appendChild(splitterCard);
             });
             
             const finalGrandTotal = grandTotalOfItems + grandTotalOfTips;
             summaryGrandTotal.innerHTML = `<span>Grand Total: ${scannedReceipt.currency}${finalGrandTotal.toFixed(2)}</span>`;
+        }
+
+        async function saveReceiptsAsImage() {
+            const saveButton = document.getElementById('save-image-button');
+            const originalText = saveButton.innerHTML;
+            saveButton.innerHTML = 'Saving...';
+            saveButton.disabled = true;
+
+            try {
+                // --- THE FIX: Target 'summary-list' instead of 'receipts-area' ---
+                const captureArea = document.getElementById('summary-list');
+                
+                const canvas = await html2canvas(captureArea, {
+                    scale: 2, 
+                    useCORS: true,
+                    // Use the correct background color for the image
+                    backgroundColor: '#f5f4f2' 
+                });
+
+                const link = document.createElement('a');
+                link.download = 'bill-buddy-summary.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+            } catch (error) {
+                console.error("Oops, something went wrong!", error);
+                alert("Error: Could not save image.");
+            } finally {
+                saveButton.innerHTML = originalText;
+                saveButton.disabled = false;
+            }
         }
 
         async function clearAllData() {
@@ -697,6 +737,7 @@
             showView('summary');
         });
         backToResultsButton.addEventListener('click', () => showView('results'));
+        document.getElementById('save-image-button').addEventListener('click', saveReceiptsAsImage);
 
         // --- INITIALIZATION ---
         async function initialize() {
