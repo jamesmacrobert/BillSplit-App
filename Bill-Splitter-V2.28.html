@@ -145,7 +145,7 @@
                         <span class="text-4xl mr-5">🧾</span>
                         <div>
                             <h3 class="font-semibold text-lg text-theme">AI Wizardry</h3>
-                            <p class="text-gray-600 text-sm">We'll read every line and turn it into an itemized digital receipt.</p>
+                            <p class="text-gray-600 text-sm">We'll read every line and turn it into an itemized digital receipt, so you can see each item's unit price. No Fuss!</p>
                         </div>
                     </div>
             
@@ -157,7 +157,7 @@
                         <span class="text-4xl mr-5">🛒</span>
                         <div>
                             <h3 class="font-semibold text-lg text-theme">Split and Assign</h3>
-                            <p class="text-gray-600 text-sm">Drag items into you or your friends' carts to split the cost instantly.</p>
+                            <p class="text-gray-600 text-sm">Drag items into you or your friends' cart to split the cost instantly. Done.</p>
                         </div>
                     </div>
                 </div>
@@ -264,7 +264,7 @@
             const payload = {
                 contents: [{
                     parts: [
-                        { text: "Analyze this receipt. Extract the restaurant's name, its address, the currency symbol (e.g., $, £, €, R), the subtotal (numerical value before tax and tip), and a list of items. For each item, provide its name, individual price, and quantity. Default quantity to 1 if not specified. Provide response as a JSON object." },
+                        { text: "Analyze this receipt. Extract the restaurant's name, its address, the currency symbol, the subtotal, and a list of items. For each item, provide its name, quantity, and the **per-unit price**. It is very important that you return the price for a single unit. For example, if you see '3 Coffees @ $2.00   $6.00', the correct price to return is `2.00`, not `6.00`. If a per-unit price is not listed on the receipt, you must calculate it by dividing the total line price by the quantity. Default quantity to 1 if not specified. Provide response as a JSON object." },
                         { inlineData: { mimeType: "image/jpeg", data: base64ImageData } }
                     ]
                 }],
@@ -290,7 +290,7 @@
                                 }
                             }
                         },
-                        required: ["restaurantName", "items", "subtotal"] // Note: Currency and Address are not strictly required from the AI
+                        required: ["restaurantName", "items", "subtotal"]
                     }
                 }
             };
@@ -304,19 +304,26 @@
                     const parsedJson = JSON.parse(result.candidates[0].content.parts[0].text);
                     if (parsedJson.items?.length > 0) {
                         
-                        // --- NEW CURRENCY LOGIC ---
-                        let currencySymbol = parsedJson.currency; // 1. Try to get currency from AI
+                        let currencyString = parsedJson.currency;
+                        
+                        const isValidSymbol = symbol => symbol && symbol.length < 5 && symbol.toLowerCase() !== 'unknown';
 
-                        // 2. If no currency, try to get it from the address
-                        if (!currencySymbol && parsedJson.restaurantAddress) {
-                            currencySymbol = await getCurrencyFromAddress(parsedJson.restaurantAddress);
+                        if (!isValidSymbol(currencyString)) {
+                            if (parsedJson.restaurantAddress) {
+                                currencyString = await getCurrencyFromAddress(parsedJson.restaurantAddress);
+                            } else {
+                                currencyString = null;
+                            }
                         }
-                        // --- END NEW CURRENCY LOGIC ---
+
+                        // --- THIS IS THE MISSING STEP ---
+                        // We must call the translator function on the string we found.
+                        const finalCurrencySymbol = normalizeCurrencySymbol(currencyString);
 
                         scannedReceipt = {
                             restaurantName: parsedJson.restaurantName,
                             restaurantAddress: parsedJson.restaurantAddress || '',
-                            currency: currencySymbol || '$', // 3. Use found symbol or default to '$'
+                            currency: finalCurrencySymbol || '$', // Use the final, translated symbol
                             subtotal: parsedJson.subtotal || parsedJson.items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
                             items: parsedJson.items.map((item, index) => ({ ...item, id: `item-${index}` }))
                         };
@@ -380,6 +387,33 @@
             // Add other European countries that use the Euro
             'DE': '€', 'FR': '€', 'ES': '€', 'IT': '€', 'NL': '€', 'IE': '€',
         };
+
+        // --- NEW: Map for converting currency codes to symbols ---
+        const currencyCodeToSymbolMap = {
+            'EUR': '€',
+            'USD': '$',
+            'CAD': '$',
+            'AUD': '$',
+            'GBP': '£',
+            'JPY': '¥',
+            'CNY': '¥',
+            'INR': '₹',
+            'ZAR': 'R'
+        };
+
+        // --- NEW: Function to ensure we always have a symbol ---
+        function normalizeCurrencySymbol(currencyString) {
+            if (!currencyString) return null;
+            const upperCaseCurrency = currencyString.toUpperCase();
+
+            // If the string is a known code (e.g., "EUR"), return its symbol.
+            if (currencyCodeToSymbolMap[upperCaseCurrency]) {
+                return currencyCodeToSymbolMap[upperCaseCurrency];
+            }
+            
+            // Otherwise, assume the string is already the correct symbol (e.g., "€")
+            return currencyString;
+        }
 
         async function getCurrencyFromAddress(address) {
             if (!address) return null;
