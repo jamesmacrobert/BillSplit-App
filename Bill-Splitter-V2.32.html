@@ -66,11 +66,11 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #6b7280; }
         .receipt-container {
             background-color: white;
-            /* box-shadow has been removed as per previous steps */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
             border-radius: 0px;
             border: 2px solid transparent;
             transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            position: relative; 
+            position: relative; /* Add this line */
         }
         .receipt-container::before,
         .receipt-container::after {
@@ -79,27 +79,28 @@
             position: absolute;
             left: -1rem;
             right: -1rem;
-            height: 16px; /* UPDATED: from 10px (for an 8px depth) */
+            height: 10px; /* Controls the height of the serrated area */
         }
 
         .receipt-container::before {
-            top: -8px; /* UPDATED: from -5px */
+            top: -5px; /* Positions the top edge slightly outside the box */
             background:
-                linear-gradient(-135deg, #f5f4f2 8px, transparent 0), /* UPDATED: from 5px */
-                linear-gradient(135deg, #f5f4f2 8px, transparent 0); /* UPDATED: from 5px */
-            background-size: 16px 16px; /* UPDATED: from 10px */
+                linear-gradient(-135deg, #f5f4f2 5px, transparent 0),
+                linear-gradient(135deg, #f5f4f2 5px, transparent 0);
+            background-size: 10px 10px;
         }
 
         .receipt-container::after {
-            bottom: -8px; /* UPDATED: from -5px */
+            bottom: -5px; /* Positions the bottom edge slightly outside the box */
             background:
-                linear-gradient(-45deg, #f5f4f2 8px, transparent 0), /* UPDATED: from 5px */
-                linear-gradient(45deg, #f5f4f2 8px, transparent 0); /* UPDATED: from 5px */
-            background-size: 16px 16px; /* UPDATED: from 10px */
+                linear-gradient(-45deg, #f5f4f2 5px, transparent 0),
+                linear-gradient(45deg, #f5f4f2 5px, transparent 0);
+            background-size: 10px 10px;
         }
         .receipt-container.active {
-            background-color: hsl(0, 0%, 100%); 
-            border-left: 2px solid #ff7754;
+            background-color: hsl(0, 0%, 100%); /* This is a light blue (Tailwind's blue-50) */
+            border-left: 2px solid #ff7754
+            /*box-shadow: 0 6px 16px rgba(59, 130, 246, 0.25); */
         }
         .btn-secondary {
             @apply px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition ease-in-out duration-150;
