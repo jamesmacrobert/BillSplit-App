@@ -222,7 +222,7 @@
                 </div>
             </div>
             <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button id="save-image-button" class="font-comfortaa w-full px-6 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-green-600 hover:bg-green-700 focus:ring-theme">Save All Receipts</button>
+                <button id="save-image-button" class="font-comfortaa w-full px-6 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-green-600 hover:bg-green-700 focus:ring-theme">Save Summary Receipt</button>
                 <button id="back-to-results-button" class="font-comfortaa w-full px-6 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-gray-500 hover:bg-gray-400 focus:ring-theme">Back to Splitting</button>
             </div>
             </div>
@@ -697,7 +697,7 @@
                         const shareData = {
                             files: [file],
                             title: 'Bill Buddy Summary',
-                            text: 'Here is the split bill summary.',
+                            text: 'Your Digital Receipt from Bill Buddy.',
                         };
                         if (navigator.canShare(shareData)) {
                             try {
