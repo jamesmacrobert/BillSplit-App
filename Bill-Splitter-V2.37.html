@@ -656,53 +656,70 @@
             saveButton.innerHTML = 'Saving...';
             saveButton.disabled = true;
 
-            // The element we want to take a picture of
             const captureArea = document.getElementById('summary-list');
-            // Keep track of its original location in the document
             const originalParent = captureArea.parentNode;
             const originalNextSibling = captureArea.nextElementSibling;
-
-            // 1. Create a new temporary wrapper to act as a "frame"
             const frame = document.createElement('div');
-
-            // 2. Style the frame with padding and the background color
-            frame.style.padding = '25px'; // Adjust this value for a thicker or thinner border
-            frame.style.backgroundColor = '#f5f4f2'; // The color of the border
             
-            // To prevent the page layout from shifting, we render the frame off-screen
+            frame.style.padding = '25px';
+            frame.style.backgroundColor = '#f5f4f2';
             frame.style.position = 'absolute';
             frame.style.top = '-9999px';
             frame.style.left = '-9999px';
             
             try {
-                // 3. Move the receipt INTO the frame, and add the frame to the page
                 frame.appendChild(captureArea);
                 document.body.appendChild(frame);
 
-                // 4. Take the screenshot of the FRAME, which now contains the receipt
                 const canvas = await html2canvas(frame, {
                     scale: 2,
                     useCORS: true,
-                    // The background is handled by the frame's style, so we can set this to null
                     backgroundColor: null
                 });
 
-                const link = document.createElement('a');
-                link.download = 'bill-buddy-summary.png';
-                link.href = canvas.toDataURL('image/png');
-                link.click();
+                // --- NEW LOGIC FOR MOBILE VS DESKTOP ---
+
+                // First, check if the browser supports the Web Share API for files.
+                if (navigator.share && navigator.canShare) {
+                    // The Share API works with File objects, so we convert the canvas to a "Blob" first.
+                    canvas.toBlob(async (blob) => {
+                        const file = new File([blob], 'bill-buddy-summary.png', { type: blob.type });
+                        const shareData = {
+                            files: [file],
+                            title: 'Bill Buddy Summary',
+                            text: 'Here is the split bill summary.',
+                        };
+
+                        // Check if the browser can share this specific data
+                        if (navigator.canShare(shareData)) {
+                            try {
+                                // Open the native mobile "share" dialog
+                                await navigator.share(shareData);
+                            } catch (err) {
+                                // This error occurs if the user cancels the share. We can safely ignore it.
+                                if (err.name !== 'AbortError') {
+                                    console.error('Share API error:', err);
+                                    // If something else went wrong, fall back to downloading.
+                                    triggerDownload(canvas);
+                                }
+                            }
+                        } else {
+                            // If the data can't be shared for some reason, fall back to download.
+                            triggerDownload(canvas);
+                        }
+                    }, 'image/png');
+                } else {
+                    // --- Fallback for Desktop Browsers ---
+                    // If the Share API isn't available, use the original download method.
+                    triggerDownload(canvas);
+                }
 
             } catch (error) {
                 console.error("Oops, something went wrong!", error);
                 alert("Error: Could not save image.");
             } finally {
-                // 5. IMPORTANT: Restore the webpage to its original state
-                // Put the receipt back where it came from
                 originalParent.insertBefore(captureArea, originalNextSibling);
-                // Remove the temporary frame from the document
                 document.body.removeChild(frame);
-
-                // Restore the button's text and state
                 saveButton.innerHTML = originalText;
                 saveButton.disabled = false;
             }
@@ -822,6 +839,13 @@
             } catch (error) {
                 showView('error', `Initialization failed: ${error.message}`);
             }
+        }
+
+        function triggerDownload(canvas) {
+            const link = document.createElement('a');
+            link.download = 'bill-buddy-summary.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
         }
 
         initialize();
