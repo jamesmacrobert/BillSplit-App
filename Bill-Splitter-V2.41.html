@@ -26,6 +26,7 @@
         .font-title {
             font-family: 'Londrina Solid', sans-serif;
             color: #ff7754;
+            cursor: pointer;
         }
         .text-theme {
             color: #ff7754;
@@ -787,6 +788,7 @@
         });
         backToResultsButton.addEventListener('click', () => showView('results'));
         rescanButton.addEventListener('click', resetApp);
+        appTitle.addEventListener('click', resetApp);
         document.getElementById('finish-button').addEventListener('click', resetApp);
         document.getElementById('save-summary-button').addEventListener('click', function() {
             saveElementAsImage('summary-list', 'bill-buddy-summary.png', this);
