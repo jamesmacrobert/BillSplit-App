@@ -656,32 +656,42 @@
             saveButton.innerHTML = 'Saving...';
             saveButton.disabled = true;
 
+            // The original, visible element we want to take a picture of
             const captureArea = document.getElementById('summary-list');
-            const originalParent = captureArea.parentNode;
-            const originalNextSibling = captureArea.nextElementSibling;
+
+            // 1. Create a temporary wrapper to act as a "frame"
             const frame = document.createElement('div');
-            
             frame.style.padding = '25px';
             frame.style.backgroundColor = '#f5f4f2';
+            
+            // Critical Step: Ensure the off-screen frame has the same width as the
+            // on-screen element. This prevents text from wrapping differently in the screenshot.
+            frame.style.width = captureArea.offsetWidth + 'px';
+
+            // Position the frame off-screen so it's never visible
             frame.style.position = 'absolute';
             frame.style.top = '-9999px';
             frame.style.left = '-9999px';
+
+            // 2. CLONE the receipt element instead of moving the original.
+            // The 'true' argument creates a deep clone, copying all its contents.
+            const clonedCaptureArea = captureArea.cloneNode(true);
             
             try {
-                frame.appendChild(captureArea);
+                // 3. Append the CLONE to the frame, and add the frame to the page.
+                // The original receipt remains untouched on the screen.
+                frame.appendChild(clonedCaptureArea);
                 document.body.appendChild(frame);
 
+                // 4. Take the screenshot of the off-screen frame containing the clone
                 const canvas = await html2canvas(frame, {
                     scale: 2,
                     useCORS: true,
                     backgroundColor: null
                 });
 
-                // --- NEW LOGIC FOR MOBILE VS DESKTOP ---
-
-                // First, check if the browser supports the Web Share API for files.
+                // (The rest of this logic for sharing/downloading remains identical)
                 if (navigator.share && navigator.canShare) {
-                    // The Share API works with File objects, so we convert the canvas to a "Blob" first.
                     canvas.toBlob(async (blob) => {
                         const file = new File([blob], 'bill-buddy-summary.png', { type: blob.type });
                         const shareData = {
@@ -689,28 +699,20 @@
                             title: 'Bill Buddy Summary',
                             text: 'Here is the split bill summary.',
                         };
-
-                        // Check if the browser can share this specific data
                         if (navigator.canShare(shareData)) {
                             try {
-                                // Open the native mobile "share" dialog
                                 await navigator.share(shareData);
                             } catch (err) {
-                                // This error occurs if the user cancels the share. We can safely ignore it.
                                 if (err.name !== 'AbortError') {
                                     console.error('Share API error:', err);
-                                    // If something else went wrong, fall back to downloading.
                                     triggerDownload(canvas);
                                 }
                             }
                         } else {
-                            // If the data can't be shared for some reason, fall back to download.
                             triggerDownload(canvas);
                         }
                     }, 'image/png');
                 } else {
-                    // --- Fallback for Desktop Browsers ---
-                    // If the Share API isn't available, use the original download method.
                     triggerDownload(canvas);
                 }
 
@@ -718,8 +720,11 @@
                 console.error("Oops, something went wrong!", error);
                 alert("Error: Could not save image.");
             } finally {
-                originalParent.insertBefore(captureArea, originalNextSibling);
+                // 5. Clean up: Simply remove the temporary frame (which contains the clone).
+                // No need to move the original receipt back, because it never left!
                 document.body.removeChild(frame);
+
+                // Restore the button's state
                 saveButton.innerHTML = originalText;
                 saveButton.disabled = false;
             }
