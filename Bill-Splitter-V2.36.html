@@ -198,7 +198,7 @@
                    <div class="w-full md:w-1/2">
                        <div class="text-center mb-1"><h2 class="text-lg font-bold text-black">Your Individual Carts</h2></div>
                        
-                       <div id="splitters-section" class="space-y-4 custom-scrollbar overflow-y-auto"></div>
+                       <div id="splitters-section" class="space-y-4"></div>
                    </div>
                </div>
 
@@ -508,7 +508,7 @@
                         }, {});
 
                         Object.values(groupedItems).forEach(item => {
-                            bodyHtml += `<div class="flex items-center justify-between py-2"><div class="flex-grow pr-1"><span class="bg-gray-200 text-gray-800 font-bold px-2 py-1 rounded-md text-sm">${item.count}x</span><span class="ml-3">${item.name}</span></div><div class="flex-shrink-0 w-10 text-right"><button class="remove-from-bill-btn text-red-500 hover:text-red-700 transition ease-in-out duration-150" data-docid="${item.docIds[item.docIds.length - 1]}"><svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></button></div></div>`;
+                            bodyHtml += `<div class="flex items-center justify-between py-0"><div class="flex-grow pr-1"><span class="bg-gray-200 text-gray-800 font-bold px-2 py-1 rounded-md text-sm">${item.count}x</span><span class="ml-3">${item.name}</span></div><div class="flex-shrink-0 w-10 text-right"><button class="remove-from-bill-btn text-red-500 hover:text-red-700 transition ease-in-out duration-150" data-docid="${item.docIds[item.docIds.length - 1]}"><svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></button></div></div>`;
                         });
                         
                         const totalsHtml = `
@@ -528,7 +528,7 @@
                 }
                 
                 // --- THIS IS THE MODIFIED LINE ---
-                splitterEl.innerHTML = `<div class="flex justify-between items-center font-bold text-lg"><span class="${isActive ? 'text-theme' : 'text-gray-800'}">${name}</span><span>${scannedReceipt.currency}${totalWithTip.toFixed(2)}</span></div><div class="splitter-body mt-3 space-y-2 text-base ${isActive ? '' : 'hidden'}">${bodyHtml}</div>`;
+                splitterEl.innerHTML = `<div class="flex justify-between items-center font-bold text-lg"><span class="${isActive ? 'text-theme' : 'text-gray-800'}">${name}</span><span>${scannedReceipt.currency}${totalWithTip.toFixed(2)}</span></div><div class="splitter-body mt-3 space-y-0 text-base ${isActive ? '' : 'hidden'}">${bodyHtml}</div>`;
 
                 splitterEl.onclick = (e) => {
                     if (e.target.closest('.remove-from-bill-btn')) {
