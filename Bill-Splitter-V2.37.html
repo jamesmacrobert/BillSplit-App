@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill Buddy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cutive+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Unica+One&display=swap" rel="stylesheet"> 
+    <link href="https://fonts.googleapis.com/css2?family=Londrina+Solid&display=swap" rel="stylesheet"> 
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f4f2;
+        }
+        .font-receipt {
+             font-family: 'Cutive Mono', monospace;
+        }
+        .font-comfortaa {
+            font-family: 'Comfortaa', sans-serif;
+        }
+        /* --- Custom Theme Colors --- */
+        .font-title {
+            /*font-family: 'Unica One', sans-serif;*/
+            font-family: 'Londrina Solid', sans-serif;
+            color: #ff7754;
+        }
+        .text-theme {
+            color: #ff7754;
+        }
+        .border-theme {
+            border-color: #ff7754;
+        }
+        .bg-theme {
+            background-color: #ff7754;
+        }
+        .hover\:bg-theme-dark:hover {
+            background-color: #e66a46; /* Darker shade for hover */
+        }
+         .hover\:bg-theme-light:hover {
+            background-color: #fff1ec; /* Lighter shade for hover */
+        }
+        .focus\:ring-theme:focus {
+            --tw-ring-color: #ff7754;
+        }
+        /* --- End Custom Theme Colors --- */
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #e5e7eb; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        .receipt-container {
+            background-color: white;
+            /* box-shadow has been removed as per previous steps */
+            border-radius: 0px;
+            border: 2px solid transparent;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            position: relative; 
+        }
+        .receipt-container::before,
+        .receipt-container::after {
+            content: "";
+            display: block;
+            position: absolute;
+            left: -1rem;
+            right: -1rem;
+            height: 16px; /* UPDATED: from 10px (for an 8px depth) */
+        }
+
+        .receipt-container::before {
+            top: -8px; /* UPDATED: from -5px */
+            background:
+                linear-gradient(-135deg, #f5f4f2 8px, transparent 0), /* UPDATED: from 5px */
+                linear-gradient(135deg, #f5f4f2 8px, transparent 0); /* UPDATED: from 5px */
+            background-size: 16px 16px; /* UPDATED: from 10px */
+        }
+
+        .receipt-container::after {
+            bottom: -8px; /* UPDATED: from -5px */
+            background:
+                linear-gradient(-45deg, #f5f4f2 8px, transparent 0), /* UPDATED: from 5px */
+                linear-gradient(45deg, #f5f4f2 8px, transparent 0); /* UPDATED: from 5px */
+            background-size: 16px 16px; /* UPDATED: from 10px */
+        }
+        .receipt-container.active {
+            background-color: hsl(0, 0%, 100%); 
+            border-left: 2px solid #ff7754;
+        }
+        .btn-secondary {
+            @apply px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition ease-in-out duration-150;
+        }
+        .btn-danger {
+            @apply px-5 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-400 transition ease-in-out duration-150;
+        }
+        .tip-button {
+            /* This now only defines layout, font, and transition */
+            @apply px-2 py-1 text-lg font-receipt cursor-pointer transition-colors duration-200;
+        }
+        .tip-button.active {
+            /* This defines the style for the SELECTED button */
+            @apply text-theme font-bold;
+        }
+        .tip-button:not(.active) {
+            /* This defines the style for the UNSELECTED buttons, including their hover effect */
+            @apply text-gray-600 hover:text-theme;
+        }
+    </style>
+</head>
+<body class="flex items-stretch justify-center min-h-screen pb-4 sm:p-6">
+
+    <div class="w-full max-w-xl mx-auto bg-white rounded-none sm:rounded-2xl shadow-xl flex flex-col">
+        <header class="bg-white text-gray-800 pt-0 sm:pt-4 p-4 rounded-t-2xl">
+             <h1 id="app-title" class="text-3xl font-bold text-center font-title tracking-wider">Bill Buddy</h1>
+        </header>
+
+        <main class="flex-grow p-4 sm:p-6 overflow-y-auto custom-scrollbar" style="background-color: #f5f4f2;">
+            <div id="upload-view" class="font-comfortaa">
+                <div class="bg-white p-6 sm:p-8 rounded-xl shadow-md">
+                    <div class="flex items-center">
+                        <span class="text-4xl mr-5">📷</span>
+                        <div>
+                            <h3 class="font-semibold text-lg text-theme">Scan Receipt</h3>
+                            <p class="text-gray-600 text-sm">Upload or snap a photo of your Bill.</p>
+                        </div>
+                    </div>
+            
+                    <div class="flex justify-start pl-4 my-2">
+                        <span class="text-2xl text-theme">↓</span>
+                    </div>
+            
+                    <div class="flex items-center">
+                        <span class="text-4xl mr-5">🧾</span>
+                        <div>
+                            <h3 class="font-semibold text-lg text-theme">AI Wizardry</h3>
+                            <p class="text-gray-600 text-sm">We'll read every line and turn it into an itemized digital receipt. No Confusion. No Fuss.</p>
+                        </div>
+                    </div>
+            
+                    <div class="flex justify-start pl-4 my-2">
+                        <span class="text-2xl text-theme">↓</span>
+                    </div>
+            
+                    <div class="flex items-center">
+                        <span class="text-4xl mr-5">🛒</span>
+                        <div>
+                            <h3 class="font-semibold text-lg text-theme">Split and Assign</h3>
+                            <p class="text-gray-600 text-sm">Drag items into you or your friends' cart to split the cost instantly. Done.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                     <label for="receipt-upload" class="cursor-pointer flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl bg-white transition-colors border-theme hover:bg-theme-light">
+                        <svg class="h-12 w-12 text-theme" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span class="mt-4 text-2xl font-semibold text-theme">Scan your Bill to Start</span>
+                    </label>
+                    <input id="receipt-upload" type="file" accept="image/*" class="hidden">
+                </div>
+
+                 <p id="userIdDisplay" class="text-center text-xs text-gray-400 mt-6 truncate">Connecting...</p>
+            </div>
+
+
+            <div id="processing-view" class="hidden text-center p-12 sm:p-16 font-comfortaa">
+                <div class="loader mx-auto"></div>
+                <p class="mt-6 text-gray-600 font-medium text-lg">Scanning Your Receipt...</p>
+                <p class="mt-4 text-theme text-sm">We're Doing Some Serious AI Wizardry Here!</p>
+            </div>
+
+            <div id="results-view" class="hidden font-receipt">
+                <div class="text-center mb-0"><h2 class="text-lg font-bold text-black" id="receipt-restaurant-name">Your Original Bill</h2></div>
+
+               <div class="flex flex-col md:flex-row md:space-x-4 space-y-6 md:space-y-0">
+                   <div class="w-full md:w-1/2 receipt-container p-4 flex flex-col">
+                       <h3 id="original-bill-title" class="font-bold text-center text-2xl flex-shrink-0 text-black">Original Bill</h3>
+                       <p id="original-bill-address" class="text-center text-xs text-gray-500 mb-2 border-b pb-2"></p>
+                       <div id="original-bill-list" class="space-y-2 text-base custom-scrollbar overflow-y-auto flex-grow"></div>
+                       <div id="original-bill-totals" class="border-t pt-3 mt-auto flex-shrink-0"></div>
+                   </div>
+
+                   <div class="w-full md:w-1/2">
+                       <div class="text-center mb-1"><h2 class="text-lg font-bold text-black">Your Individual Carts</h2></div>
+                       
+                       <div id="splitters-section" class="space-y-4"></div>
+                   </div>
+               </div>
+
+               <div id="add-splitter-form-container" class="mt-4 hidden">
+                <form id="add-splitter-form" class="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-3">
+                    <input type="text" id="splitter-name-input" placeholder="Add a friend's name..." class="font-comfortaa w-full sm:max-w-xs px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-base focus:ring-indigo-500 focus:border-indigo-500" required>
+                    <button type="submit" class="font-comfortaa w-full sm:w-auto px-6 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-theme hover:bg-theme-dark focus:ring-theme">Add</button>
+                </form>
+            </div>
+
+            <div class="mt-8 flex justify-center space-x-4">
+                <button id="rescan-button" class="font-comfortaa flex-1 px-4 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-gray-500 hover:bg-gray-400 focus:ring-theme">Scan Another Receipt</button>
+                <button id="summary-button" class="font-comfortaa flex-1 px-4 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-theme hover:bg-theme-dark focus:ring-theme">See Summary of Carts</button>
+            </div>
+           </div>
+            
+           <div id="summary-view" class="hidden">
+            <h2 class="text-lg font-bold text-center mb-1 text-gray-800 font-receipt">Summary of Carts</h2>
+            <div id="summary-list" class="receipt-container p-4 shadow-lg font-receipt">
+            <div id="summary-grand-total" class="font-receipt mt-8 pt-4 border-t-2 border-gray-300 text-right font-bold text-xl text-gray-800">
+                </div>
+            </div>
+            <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button id="save-image-button" class="font-comfortaa w-full px-6 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-green-600 hover:bg-green-700 focus:ring-theme">Save All Receipts</button>
+                <button id="back-to-results-button" class="font-comfortaa w-full px-6 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150 bg-gray-500 hover:bg-gray-400 focus:ring-theme">Back to Splitting</button>
+            </div>
+            </div>
+
+            <div id="error-view" class="hidden text-center p-12 sm:p-16 bg-red-50 rounded-xl shadow-sm">
+                <p class="text-red-700 font-bold text-xl">Oops!</p>
+                <p id="error-message" class="text-red-600 mt-3 text-base"></p>
+                <button id="try-again-button" class="mt-8 btn-danger">Try Again</button>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, setLogLevel, getDocs, doc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- DOM ELEMENT REFERENCES ---
+        const uploadView = document.getElementById('upload-view'), processingView = document.getElementById('processing-view'), resultsView = document.getElementById('results-view'), errorView = document.getElementById('error-view'), summaryView = document.getElementById('summary-view');
+        const errorMessage = document.getElementById('error-message'), receiptUploadInput = document.getElementById('receipt-upload');
+        const originalBillList = document.getElementById('original-bill-list'), originalBillTotals = document.getElementById('original-bill-totals'), originalBillTitle = document.getElementById('original-bill-title'), originalBillAddress = document.getElementById('original-bill-address');
+        const splittersSection = document.getElementById('splitters-section');
+        const addSplitterFormContainer = document.getElementById('add-splitter-form-container'), addSplitterForm = document.getElementById('add-splitter-form'), splitterNameInput = document.getElementById('splitter-name-input');
+        const userIdDisplay = document.getElementById('userIdDisplay'), appTitle = document.getElementById('app-title'), receiptRestaurantName = document.getElementById('receipt-restaurant-name');
+        const rescanButton = document.getElementById('rescan-button'), tryAgainButton = document.getElementById('try-again-button'), summaryButton = document.getElementById('summary-button'), backToResultsButton = document.getElementById('back-to-results-button');
+        const summaryList = document.getElementById('summary-list'), summaryGrandTotal = document.getElementById('summary-grand-total');
+
+        // --- APP STATE ---
+        let db, auth, userId, unsubClaimed = null, unsubSplitters = null, activeSplitterName = null;
+        let scannedReceipt = { restaurantName: '', restaurantAddress: '', currency: '$', subtotal: 0, items: [] };
+        let allClaimedItems = [], allSplitters = [];
+        let tipPercentage = 10; // Default tip percentage
+        let isCustomTipActive = false;
+
+        function showView(viewName, message = '') {
+            [uploadView, processingView, resultsView, errorView, summaryView].forEach(v => v.classList.add('hidden'));
+            document.getElementById(`${viewName}-view`).classList.remove('hidden');
+            if (viewName === 'error') errorMessage.textContent = message || "An unknown error occurred.";
+        }
+
+        function toBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = reject; }); }
+
+        async function processReceiptImage(base64ImageData) {
+            showView('processing');
+            const apiKey = "AIzaSyCFmm2VVu_uKLBCIjSdqA-xcvjAaWjq6DQ"; // YOUR GEMINI API KEY
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{
+                    parts: [
+                        { text: "Analyze this receipt. Extract the restaurant's name, its address, the currency symbol, the subtotal, and a list of items. For each item, provide its name, quantity, and the **per-unit price**. It is very important that you return the price for a single unit. For example, if you see '3 Coffees @ $2.00   $6.00', the correct price to return is `2.00`, not `6.00`. If a per-unit price is not listed on the receipt, you must calculate it by dividing the total line price by the quantity. Default quantity to 1 if not specified. Provide response as a JSON object." },
+                        { inlineData: { mimeType: "image/jpeg", data: base64ImageData } }
+                    ]
+                }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            restaurantName: { type: "STRING" },
+                            restaurantAddress: { type: "STRING" },
+                            currency: { type: "STRING" },
+                            subtotal: { type: "NUMBER" },
+                            items: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        name: { type: "STRING" },
+                                        price: { type: "NUMBER" },
+                                        quantity: { type: "NUMBER" }
+                                    },
+                                    required: ["name", "price", "quantity"]
+                                }
+                            }
+                        },
+                        required: ["restaurantName", "items", "subtotal"]
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
+                const result = await response.json();
+
+                if (result.candidates?.[0].content?.parts?.[0]) {
+                    const parsedJson = JSON.parse(result.candidates[0].content.parts[0].text);
+                    if (parsedJson.items?.length > 0) {
+                        
+                        let currencyString = parsedJson.currency;
+                        
+                        const isValidSymbol = symbol => symbol && symbol.length < 5 && symbol.toLowerCase() !== 'unknown';
+
+                        if (!isValidSymbol(currencyString)) {
+                            if (parsedJson.restaurantAddress) {
+                                currencyString = await getCurrencyFromAddress(parsedJson.restaurantAddress);
+                            } else {
+                                currencyString = null;
+                            }
+                        }
+
+                        // --- THIS IS THE MISSING STEP ---
+                        // We must call the translator function on the string we found.
+                        const finalCurrencySymbol = normalizeCurrencySymbol(currencyString);
+
+                        scannedReceipt = {
+                            restaurantName: parsedJson.restaurantName,
+                            restaurantAddress: parsedJson.restaurantAddress || '',
+                            currency: finalCurrencySymbol || '$', // Use the final, translated symbol
+                            subtotal: parsedJson.subtotal || parsedJson.items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                            items: parsedJson.items.map((item, index) => ({ ...item, id: `item-${index}` }))
+                        };
+                        
+                        originalBillTitle.textContent = scannedReceipt.restaurantName || "Original Bill";
+                        originalBillAddress.textContent = scannedReceipt.restaurantAddress;
+                        
+                        await clearAllData();
+                        addSplitterFormContainer.classList.remove('hidden');
+                        renderApp();
+                        showView('results');
+                    } else throw new Error("AI could not find items on the receipt.");
+                } else throw new Error("The AI returned an unexpected response.");
+            } catch (error) { showView('error', error.message); }
+        }
+        
+        function setupTipButtons() {
+            document.querySelectorAll('.tip-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    isCustomTipActive = false;
+                    tipPercentage = parseInt(e.target.dataset.percent);
+                    renderApp();
+                });
+            });
+
+            // Custom button
+            const customBtn = document.getElementById('custom-tip-btn');
+            if (customBtn) {
+                customBtn.addEventListener('click', () => {
+                    if (!isCustomTipActive) {
+                        isCustomTipActive = true;
+                        renderApp();
+                    }
+                });
+            }
+
+            // Custom input field
+            const customInput = document.getElementById('custom-tip-input');
+            if (customInput) {
+                customInput.focus();
+                customInput.select();
+                
+                customInput.addEventListener('input', () => {
+                    const value = parseFloat(customInput.value);
+                    tipPercentage = isNaN(value) ? 0 : value;
+                    renderApp();
+                });
+            }
+        }
+
+        // --- NEW: Data and function for location-based currency detection ---
+        const countryToCurrencyMap = {
+            'ZA': 'R',  // South Africa
+            'GB': '£',  // Great Britain
+            'US': '$',  // United States
+            'CA': '$',  // Canada
+            'AU': '$',  // Australia
+            'JP': '¥',  // Japan
+            'CN': '¥',  // China
+            'IN': '₹',  // India
+            // Add other European countries that use the Euro
+            'DE': '€', 'FR': '€', 'ES': '€', 'IT': '€', 'NL': '€', 'IE': '€',
+        };
+
+        // --- NEW: Map for converting currency codes to symbols ---
+        const currencyCodeToSymbolMap = {
+            'EUR': '€',
+            'USD': '$',
+            'CAD': '$',
+            'AUD': '$',
+            'GBP': '£',
+            'JPY': '¥',
+            'CNY': '¥',
+            'INR': '₹',
+            'ZAR': 'R'
+        };
+
+        // --- NEW: Function to ensure we always have a symbol ---
+        function normalizeCurrencySymbol(currencyString) {
+            if (!currencyString) return null;
+            const upperCaseCurrency = currencyString.toUpperCase();
+
+            // If the string is a known code (e.g., "EUR"), return its symbol.
+            if (currencyCodeToSymbolMap[upperCaseCurrency]) {
+                return currencyCodeToSymbolMap[upperCaseCurrency];
+            }
+            
+            // Otherwise, assume the string is already the correct symbol (e.g., "€")
+            return currencyString;
+        }
+
+        async function getCurrencyFromAddress(address) {
+            if (!address) return null;
+            
+            console.log(`Geocoding address to find currency: ${address}`);
+            const encodedAddress = encodeURIComponent(address);
+            const apiUrl = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=1&addressdetails=1`;
+
+            try {
+                const response = await fetch(apiUrl, { headers: { 'Accept': 'application/json' }});
+                if (!response.ok) return null;
+
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    const countryCode = data[0].address.country_code.toUpperCase();
+                    console.log(`Detected country code: ${countryCode}`);
+                    // Look up the currency symbol in our map, or return null if not found
+                    return countryToCurrencyMap[countryCode] || null;
+                }
+                return null;
+            } catch (error) {
+                console.error("Geocoding API failed:", error);
+                return null;
+            }
+        }
+
+        function renderApp() {
+            appTitle.textContent = 'Bill Buddy';
+
+            const claimedByOriginalId = allClaimedItems.reduce((acc, item) => {
+                const id = item.data.originalId;
+                if (!acc[id]) acc[id] = 0;
+                acc[id]++;
+                return acc;
+            }, {});
+
+            originalBillList.innerHTML = '';
+            scannedReceipt.items.forEach(originalItem => {
+                const takenCount = claimedByOriginalId[originalItem.id] || 0;
+                const remainingCount = originalItem.quantity - takenCount;
+                const isClaimed = remainingCount <= 0;
+
+                const itemEl = document.createElement('div');
+                itemEl.className = `flex items-center justify-between py-0 ${isClaimed ? 'text-gray-400 line-through' : ''}`;
+                itemEl.innerHTML = `<div class="flex-grow pr-1"><span class="bg-gray-200 text-gray-700 font-bold px-2 py-1 rounded-md text-sm">${remainingCount}x</span><span class="ml-3">${originalItem.name}</span></div><div class="flex-shrink-0 w-20 text-right"><span>${scannedReceipt.currency}${originalItem.price.toFixed(2)}</span></div><div class="flex-shrink-0 w-10 text-right"><button class="add-to-bill-btn text-green-500 hover:text-green-700 transition ease-in-out duration-150 ${isClaimed || !activeSplitterName ? 'opacity-30 cursor-not-allowed' : ''}" ${isClaimed || !activeSplitterName ? 'disabled' : ''}><svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></button></div>`;
+                if (!isClaimed && activeSplitterName) { itemEl.querySelector('.add-to-bill-btn').onclick = () => addItemToBill({ name: originalItem.name, price: originalItem.price, originalId: originalItem.id }); }
+                originalBillList.appendChild(itemEl);
+            });
+            
+            const claimedBySplitter = allClaimedItems.reduce((acc, item) => {
+                const name = item.data.splitterName;
+                if (!acc[name]) acc[name] = [];
+                acc[name].push(item);
+                return acc;
+            }, {});
+
+            let totalAmountInCarts = 0;
+
+            splittersSection.innerHTML = '';
+            allSplitters.forEach(splitter => {
+                const name = splitter.data.name;
+                const items = claimedBySplitter[name] || [];
+                const itemsTotal = items.reduce((sum, item) => sum + item.data.price, 0);
+                const tipForPerson = itemsTotal * (tipPercentage / 100);
+                const totalWithTip = itemsTotal + tipForPerson;
+                const isActive = name === activeSplitterName;
+
+                totalAmountInCarts += totalWithTip; 
+
+                const splitterEl = document.createElement('div');
+                splitterEl.className = `receipt-container p-4 cursor-pointer ${isActive ? 'active' : ''}`;
+
+                let bodyHtml = '';
+                if (isActive) {
+                    if (items.length === 0) {
+                        bodyHtml = `<p class="text-gray-400 text-center p-3 text-sm">Claim items from the Original Bill.</p>`;
+                    } else {
+                        const groupedItems = items.reduce((acc, item) => {
+                             const key = item.data.originalId;
+                             if (!acc[key]) acc[key] = { ...item.data, count: 0, docIds: [] };
+                             acc[key].count++;
+                             acc[key].docIds.push(item.id);
+                             return acc;
+                        }, {});
+
+                        Object.values(groupedItems).forEach(item => {
+                            bodyHtml += `<div class="flex items-center justify-between py-0"><div class="flex-grow pr-1"><span class="bg-gray-200 text-gray-800 font-bold px-2 py-1 rounded-md text-sm">${item.count}x</span><span class="ml-3">${item.name}</span></div><div class="flex-shrink-0 w-10 text-right"><button class="remove-from-bill-btn text-red-500 hover:text-red-700 transition ease-in-out duration-150" data-docid="${item.docIds[item.docIds.length - 1]}"><svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></button></div></div>`;
+                        });
+                        
+                        const totalsHtml = `
+                            <div class="border-t border-dashed mt-3 pt-3">
+                                <div class="flex justify-between items-center text-base mb-1">
+                                    <span class="text-gray-500 font-medium">Your Subtotal</span>
+                                    <span class="text-gray-700 font-medium">${scannedReceipt.currency}${itemsTotal.toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-base">
+                                     <span class="text-gray-500 font-medium">Tip</span>
+                                     <span class="text-gray-700 font-medium">+ ${scannedReceipt.currency}${tipForPerson.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        `;
+                        bodyHtml += totalsHtml;
+                    }
+                }
+                
+                // --- THIS IS THE MODIFIED LINE ---
+                splitterEl.innerHTML = `<div class="flex justify-between items-center font-bold text-lg"><span class="${isActive ? 'text-theme' : 'text-gray-800'}">${name}</span><span>${scannedReceipt.currency}${totalWithTip.toFixed(2)}</span></div><div class="splitter-body mt-3 space-y-0 text-base ${isActive ? '' : 'hidden'}">${bodyHtml}</div>`;
+
+                splitterEl.onclick = (e) => {
+                    if (e.target.closest('.remove-from-bill-btn')) {
+                       const docId = e.target.closest('.remove-from-bill-btn').dataset.docid;
+                       removeItemFromBill(docId);
+                       return;
+                    }
+                    activeSplitterName = name;
+                    renderApp();
+                };
+                splittersSection.appendChild(splitterEl);
+            });
+            
+            const subtotal = scannedReceipt.subtotal;
+            const tipAmount = subtotal * (tipPercentage / 100);
+            const grandTotal = subtotal + tipAmount;
+            const balance = grandTotal - totalAmountInCarts; 
+            const balanceColorClass = balance > 0.001 ? 'text-red-600' : 'text-green-600';
+
+            const tipButtonBaseClasses = 'tip-button px-3 py-1 rounded-lg text-lg font-receipt cursor-pointer transition-all duration-200';
+            const tipButtonActiveClasses = 'bg-theme text-white font-bold shadow';
+            const tipButtonInactiveClasses = 'text-gray-600 bg-gray-100 hover:bg-theme-light hover:text-theme';
+
+            originalBillTotals.innerHTML = `
+                <div class="flex justify-between font-medium text-gray-600 mb-2 text-lg"><span>Subtotal:</span><span>${scannedReceipt.currency}${subtotal.toFixed(2)}</span></div>
+                <div class="flex justify-between items-center text-lg">
+                    <span class="font-medium text-gray-600">Tip:</span>
+                    <div class="flex items-center space-x-2">
+                        <button class="${tipButtonBaseClasses} ${tipPercentage === 0 ? tipButtonActiveClasses : tipButtonInactiveClasses}" data-percent="0">0%</button>
+                        <button class="${tipButtonBaseClasses} ${tipPercentage === 10 ? tipButtonActiveClasses : tipButtonInactiveClasses}" data-percent="10">10%</button>
+                        <button class="${tipButtonBaseClasses} ${tipPercentage === 15 ? tipButtonActiveClasses : tipButtonInactiveClasses}" data-percent="15">15%</button>
+                        <button class="${tipButtonBaseClasses} ${tipPercentage === 20 ? tipButtonActiveClasses : tipButtonInactiveClasses}" data-percent="20">20%</button>
+                    </div>
+                </div>
+                <div class="text-right font-receipt text-lg mb-2">${scannedReceipt.currency}${tipAmount.toFixed(2)}</div>
+                <div class="flex justify-between font-bold text-lg border-t-0 pt-2 mt-2"><span>Total:</span><span>${scannedReceipt.currency}${grandTotal.toFixed(2)}</span></div>
+                <div class="flex justify-between ${balanceColorClass} font-bold mt-1 text-lg"><span>Balance Due:</span><span>${scannedReceipt.currency}${balance.toFixed(2)}</span></div>
+                `;
+            setupTipButtons();
+        }
+        
+        function renderSummaryView() {
+            summaryList.innerHTML = '';
+            //summaryGrandTotal.innerHTML = '';
+            
+            const claimedBySplitter = allClaimedItems.reduce((acc, item) => {
+                const name = item.data.splitterName;
+                if (!acc[name]) acc[name] = [];
+                acc[name].push(item);
+                return acc;
+            }, {});
+
+            let grandTotalOfItems = 0;
+            let grandTotalOfTips = 0;
+            
+            let combinedHtml = `
+            <div class="text-right text-xs text-theme pb-0 mb-2">Powered By Bill Buddy</div>
+                <div class="text-center mb-0">
+                    <h2 class="text-lg font-bold text-black" id="summary-restaurant-name">${scannedReceipt.restaurantName || "Summary Bill"}</h2>
+                    <p class="text-center text-xs text-gray-500 mb-2 border-b pb-2" id="summary-restaurant-address">${scannedReceipt.restaurantAddress}</p>
+                </div>
+            `;
+
+            let peopleCountInSummary = 0;
+            allSplitters.forEach((splitter) => {
+                const name = splitter.data.name;
+                const items = claimedBySplitter[name] || [];
+                if (items.length === 0) return;
+
+                if (peopleCountInSummary > 0) {
+                    combinedHtml += `<div class="border-t-2 border-dashed border-gray-200 my-4"></div>`;
+                }
+                
+                const itemsSubTotal = items.reduce((sum, item) => sum + item.data.price, 0);
+                const tipForPerson = itemsSubTotal * (tipPercentage / 100);
+                const totalForSplitter = itemsSubTotal + tipForPerson;
+
+                grandTotalOfItems += itemsSubTotal;
+                grandTotalOfTips += tipForPerson;
+
+                // --- NEW: Simplified item list styling ---
+                let itemsHtml = '';
+                const groupedItems = items.reduce((acc, item) => {
+                     const key = item.data.name;
+                     if (!acc[key]) acc[key] = { ...item.data, count: 0, totalPrice: 0 };
+                     acc[key].count++;
+                     acc[key].totalPrice += item.data.price;
+                     return acc;
+                }, {});
+
+                Object.values(groupedItems).forEach(item => {
+                    // This is the new, simpler line for each item
+                    itemsHtml += `<div class="flex justify-between items-center text-sm text-black py-0">
+                                    <span>${item.count}x ${item.name}</span>
+                                    <span>${scannedReceipt.currency}${item.totalPrice.toFixed(2)}</span>
+                                  </div>`;
+                });
+                // --- END of new styling ---
+
+                itemsHtml += `<div class="flex justify-between items-center text-sm text-gray-600 py-1 mt-1 pt-1"><span class="font-bold">Tip</span><span class="font-bold">${scannedReceipt.currency}${tipForPerson.toFixed(2)}</span></div>`;
+
+                combinedHtml += `
+                    <h3 class="font-bold text-lg text-theme">${name}</h3>
+                    <div class="mt-2 mb-3 border-t pt-2">${itemsHtml}</div>
+                    <div class="text-right font-bold text-black pt-0">Total: ${scannedReceipt.currency}${totalForSplitter.toFixed(2)}</div>
+                `;
+                
+                peopleCountInSummary++;
+            });
+            
+            const finalGrandTotal = grandTotalOfItems + grandTotalOfTips;
+
+            combinedHtml += `
+                <div class="mt-8 pt-4 text-right font-bold text-xl text-gray-800">
+                    <span>Grand Total: ${scannedReceipt.currency}${finalGrandTotal.toFixed(2)}</span>
+                </div>
+                `;
+            summaryList.innerHTML = combinedHtml;
+            
+        }
+
+        async function saveReceiptsAsImage() {
+            const saveButton = document.getElementById('save-image-button');
+            const originalText = saveButton.innerHTML;
+            saveButton.innerHTML = 'Saving...';
+            saveButton.disabled = true;
+
+            // The element we want to take a picture of
+            const captureArea = document.getElementById('summary-list');
+            // Keep track of its original location in the document
+            const originalParent = captureArea.parentNode;
+            const originalNextSibling = captureArea.nextElementSibling;
+
+            // 1. Create a new temporary wrapper to act as a "frame"
+            const frame = document.createElement('div');
+
+            // 2. Style the frame with padding and the background color
+            frame.style.padding = '25px'; // Adjust this value for a thicker or thinner border
+            frame.style.backgroundColor = '#f5f4f2'; // The color of the border
+            
+            // To prevent the page layout from shifting, we render the frame off-screen
+            frame.style.position = 'absolute';
+            frame.style.top = '-9999px';
+            frame.style.left = '-9999px';
+            
+            try {
+                // 3. Move the receipt INTO the frame, and add the frame to the page
+                frame.appendChild(captureArea);
+                document.body.appendChild(frame);
+
+                // 4. Take the screenshot of the FRAME, which now contains the receipt
+                const canvas = await html2canvas(frame, {
+                    scale: 2,
+                    useCORS: true,
+                    // The background is handled by the frame's style, so we can set this to null
+                    backgroundColor: null
+                });
+
+                const link = document.createElement('a');
+                link.download = 'bill-buddy-summary.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+            } catch (error) {
+                console.error("Oops, something went wrong!", error);
+                alert("Error: Could not save image.");
+            } finally {
+                // 5. IMPORTANT: Restore the webpage to its original state
+                // Put the receipt back where it came from
+                originalParent.insertBefore(captureArea, originalNextSibling);
+                // Remove the temporary frame from the document
+                document.body.removeChild(frame);
+
+                // Restore the button's text and state
+                saveButton.innerHTML = originalText;
+                saveButton.disabled = false;
+            }
+        }
+
+        async function clearAllData() {
+            if (!userId || !db) return;
+            const batch = writeBatch(db);
+            const claimedRef = collection(db, 'claimed_items');
+            const splittersRef = collection(db, 'splitters');
+
+            const claimedSnapshot = await getDocs(claimedRef);
+            claimedSnapshot.forEach(doc => batch.delete(doc.ref));
+
+            const splittersSnapshot = await getDocs(splittersRef);
+            splittersSnapshot.forEach(doc => batch.delete(doc.ref));
+
+            await batch.commit();
+        }
+
+        async function addSplitter(name) {
+             if (!userId || !db) return;
+             try {
+                const collectionRef = collection(db, 'splitters');
+                await addDoc(collectionRef, { name, createdAt: new Date() });
+             } catch (error) { console.error("Error adding splitter:", error); }
+        }
+
+        async function addItemToBill(item) {
+            if (!userId || !db || !activeSplitterName) return;
+            try {
+                const collectionRef = collection(db, 'claimed_items');
+                await addDoc(collectionRef, { ...item, splitterName: activeSplitterName, createdAt: new Date() });
+            } catch (error) { console.error("Error adding item:", error); }
+        }
+
+        async function removeItemFromBill(docId) {
+            if (!userId || !db) return;
+            try {
+                const docRef = doc(db, 'claimed_items', docId);
+                await deleteDoc(docRef);
+            } catch (error) { console.error("Error removing item:", error); }
+        }
+
+        function setupListeners() {
+            if (unsubClaimed) unsubClaimed();
+            if (unsubSplitters) unsubSplitters();
+
+            const claimedRef = collection(db, 'claimed_items');
+            unsubClaimed = onSnapshot(claimedRef, (snapshot) => {
+                allClaimedItems = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+                if (scannedReceipt.items.length > 0) renderApp();
+            });
+
+            const splittersRef = collection(db, 'splitters');
+            unsubSplitters = onSnapshot(splittersRef, (snapshot) => {
+                allSplitters = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+                if (scannedReceipt.items.length > 0) renderApp();
+            });
+        }
+
+        // --- EVENT LISTENERS ---
+        receiptUploadInput.addEventListener('change', async (event) => { if (event.target.files[0]) { const base64Data = await toBase64(event.target.files[0]); processReceiptImage(base64Data); } });
+        rescanButton.addEventListener('click', () => {
+            scannedReceipt = { restaurantName: '', restaurantAddress: '', currency: '$', subtotal: 0, items: [] };
+            appTitle.textContent = 'Bill Buddy';
+            originalBillTitle.textContent = 'Original Bill';
+            originalBillAddress.textContent = '';
+            splitterNameInput.value = '';
+            activeSplitterName = null;
+            showView('upload');
+            addSplitterFormContainer.classList.add('hidden');
+        });
+        tryAgainButton.addEventListener('click', () => showView('upload'));
+        addSplitterForm.addEventListener('submit', (e) => { e.preventDefault(); const name = splitterNameInput.value.trim(); if (name && !allSplitters.find(s => s.data.name === name)) { activeSplitterName = name; addSplitter(name); splitterNameInput.value = ''; } });
+        
+        summaryButton.addEventListener('click', () => {
+            renderSummaryView();
+            showView('summary');
+        });
+        backToResultsButton.addEventListener('click', () => showView('results'));
+        document.getElementById('save-image-button').addEventListener('click', saveReceiptsAsImage);
+
+        // --- INITIALIZATION ---
+        async function initialize() {
+            // Paste your Firebase config object here.
+            const firebaseConfig = {
+                apiKey: "AIzaSyAELza0EhhCP1qKKqhMTOMr-ZAQRun7iXM",
+                authDomain: "bill-splitter-v1.firebaseapp.com",
+                projectId: "bill-splitter-v1",
+                storageBucket: "bill-splitter-v1.firebasestorage.app",
+                messagingSenderId: "752281135823",
+                appId: "1:752281135823:web:0a283053ce8b9fc519e5ba",
+                measurementId: "G-6VZGWPHFM4"
+            };
+
+            try {
+                setLogLevel('error');
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        userIdDisplay.textContent = `User ID: ${userId.substring(0,8)}...`;
+                        if (!unsubClaimed) { clearAllData(); }
+                        setupListeners();
+                        showView('upload');
+                    }
+                });
+
+                if (!auth.currentUser) {
+                    await signInAnonymously(auth);
+                }
+
+            } catch (error) {
+                showView('error', `Initialization failed: ${error.message}`);
+            }
+        }
+
+        initialize();
+
+    </script>
+</body>
+</html>
